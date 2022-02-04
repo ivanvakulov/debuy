@@ -25,7 +25,7 @@ contract Debuy is IDebuy {
         string calldata _region,
         string calldata _ipfs,
         address _buyer
-    ) external payable override returns (uint256 index) {
+    ) external payable returns (uint256 index) {
         Status status = Status.Created;
         if (msg.value > 0) {
             require(
@@ -51,13 +51,14 @@ contract Debuy is IDebuy {
             })
         );
 
-        // TODO emit event of creation
+        emit AdvertCreated(msg.sender, _buyer, indexCounter);
+
         updateActivity();
         indexCounter++;
         return indexCounter - 1;
     }
 
-    function applyToAdvert(uint256 _id) external payable {
+    function applyToAdvert(uint256 _id) external payable override {
         if (msg.sender == adverts[_id].seller) {
             applyToAdvertBySeller(_id);
         } else if (
@@ -82,10 +83,26 @@ contract Debuy is IDebuy {
         );
         if (adverts[_id].status == Status.Created) {
             adverts[_id].status = Status.SellerBacked;
-            // TODO emit event of seller backed
+
+            emit SellerBacked(
+                adverts[_id].seller,
+                adverts[_id].buyer,
+                _id,
+                (adverts[_id].price * adverts[_id].sellerRatio) /
+                    DEPOSIT_DENOMINATOR
+            );
         } else if (adverts[_id].status == Status.BuyerBacked) {
             adverts[_id].status = Status.Active;
-            // TODO emit event of active
+
+            emit AdvertActivated(
+                adverts[_id].seller,
+                adverts[_id].buyer,
+                _id,
+                (adverts[_id].price *
+                    adverts[_id].sellerRatio +
+                    adverts[_id].price *
+                    adverts[_id].buyerRatio) / DEPOSIT_DENOMINATOR
+            );
         } else {
             revert("Already applied.");
         }
@@ -108,10 +125,26 @@ contract Debuy is IDebuy {
         );
         if (adverts[_id].status == Status.Created) {
             adverts[_id].status = Status.BuyerBacked;
-            // TODO emit event of seller backed
+
+            emit BuyerBacked(
+                adverts[_id].seller,
+                adverts[_id].buyer,
+                _id,
+                (adverts[_id].price * adverts[_id].buyerRatio) /
+                    DEPOSIT_DENOMINATOR
+            );
         } else if (adverts[_id].status == Status.SellerBacked) {
             adverts[_id].status = Status.Active;
-            // TODO emit event of active
+
+            emit AdvertActivated(
+                adverts[_id].seller,
+                adverts[_id].buyer,
+                _id,
+                (adverts[_id].price *
+                    adverts[_id].sellerRatio +
+                    adverts[_id].price *
+                    adverts[_id].buyerRatio) / DEPOSIT_DENOMINATOR
+            );
         } else {
             revert("Already applied.");
         }
@@ -120,14 +153,54 @@ contract Debuy is IDebuy {
         updateActivity();
     }
 
+    function withdraw(uint256 _id) external {
+        require(
+            adverts[_id].status == Status.BuyerBacked ||
+                adverts[_id].status == Status.SellerBacked,
+            "Can't withdraw from this advert."
+        );
+        if (msg.sender == adverts[_id].buyer) {
+            adverts[_id].status = Status.Created;
+
+            uint256 value = (adverts[_id].price * adverts[_id].buyerRatio) /
+                DEPOSIT_DENOMINATOR;
+            (bool sent, ) = adverts[_id].buyer.call{value: value}("");
+            require(sent, "Failed to send Ether");
+            emit Withdrawn(
+                adverts[_id].seller,
+                adverts[_id].buyer,
+                _id,
+                adverts[_id].buyer
+            );
+        } else if (msg.sender == adverts[_id].seller) {
+            adverts[_id].status = Status.Created;
+
+            uint256 value = (adverts[_id].price * adverts[_id].sellerRatio) /
+                DEPOSIT_DENOMINATOR;
+            (bool sent, ) = adverts[_id].seller.call{value: value}("");
+            require(sent, "Failed to send Ether");
+            emit Withdrawn(
+                adverts[_id].seller,
+                adverts[_id].buyer,
+                _id,
+                adverts[_id].seller
+            );
+        } else {
+            revert("You are not a part of this advert.");
+        }
+    }
+
     function forceClose(uint256 _id) external {
         require(adverts[_id].status == Status.Active, "Advert is not active.");
 
         uint256 lastActive;
+        address side;
 
         if (msg.sender == adverts[_id].seller) {
+            side = adverts[_id].seller;
             lastActive = lastActivity[adverts[_id].buyer];
         } else if (msg.sender == adverts[_id].buyer) {
+            side = adverts[_id].buyer;
             lastActive = lastActivity[adverts[_id].seller];
         } else {
             revert("You are not a part of this advert.");
@@ -147,7 +220,8 @@ contract Debuy is IDebuy {
         (bool sent, ) = msg.sender.call{value: value}("");
         require(sent, "Failed to send Ether");
 
-        // TODO emit event of forceClose
+        emit ForceClosed(adverts[_id].seller, adverts[_id].buyer, _id, side);
+
         updateActivity();
     }
 
@@ -170,7 +244,7 @@ contract Debuy is IDebuy {
         (sent, ) = adverts[_id].buyer.call{value: value}("");
         require(sent, "Failed to send Ether");
 
-        // TODO emit event of Finished
+        emit AdvertFinished(adverts[_id].seller, adverts[_id].buyer, _id);
 
         updateActivity();
     }
@@ -196,7 +270,7 @@ contract Debuy is IDebuy {
             revert("Advert can't be updated.");
         }
 
-        // TODO emit event buyer updated
+        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
 
         updateActivity();
     }
@@ -215,7 +289,8 @@ contract Debuy is IDebuy {
         onlySellerOnCreated(_id)
     {
         adverts[_id].price = _newPrice;
-        // TODO emit updated price ?
+
+        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
     }
 
     function updateTitle(uint256 _id, string calldata _newTitle)
@@ -223,7 +298,8 @@ contract Debuy is IDebuy {
         onlySellerOnCreated(_id)
     {
         adverts[_id].title = _newTitle;
-        // TODO emit updated title ?
+
+        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
     }
 
     function updateDescription(uint256 _id, string calldata _newDescription)
@@ -231,7 +307,8 @@ contract Debuy is IDebuy {
         onlySellerOnCreated(_id)
     {
         adverts[_id].description = _newDescription;
-        // TODO emit updated description ?
+
+        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
     }
 
     function updateIpfs(uint256 _id, string calldata _newIpfs)
@@ -239,7 +316,8 @@ contract Debuy is IDebuy {
         onlySellerOnCreated(_id)
     {
         adverts[_id].ipfs = _newIpfs;
-        // TODO emit updated ipfs ?
+
+        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
     }
 
     function updateRegion(uint256 _id, string calldata _newRegion)
@@ -247,33 +325,8 @@ contract Debuy is IDebuy {
         onlySellerOnCreated(_id)
     {
         adverts[_id].region = _newRegion;
-        // TODO emit updated region ?
-    }
 
-    function withdraw(uint256 _id) external {
-        require(
-            adverts[_id].status == Status.BuyerBacked ||
-                adverts[_id].status == Status.SellerBacked,
-            "Can't withdraw from this advert."
-        );
-        if (msg.sender == adverts[_id].buyer) {
-            adverts[_id].status = Status.Created;
-
-            uint256 value = (adverts[_id].price * adverts[_id].buyerRatio) /
-                DEPOSIT_DENOMINATOR;
-            (bool sent, ) = adverts[_id].buyer.call{value: value}("");
-            require(sent, "Failed to send Ether");
-        } else if (msg.sender == adverts[_id].seller) {
-            adverts[_id].status = Status.Created;
-
-            uint256 value = (adverts[_id].price * adverts[_id].sellerRatio) /
-                DEPOSIT_DENOMINATOR;
-            (bool sent, ) = adverts[_id].seller.call{value: value}("");
-            require(sent, "Failed to send Ether");
-        } else {
-            revert("You are not a part of this advert.");
-        }
-        // TODO emit withdrawed deposit ?
+        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
     }
 
     function decreaseSellerRatio(uint256 _id, uint256 _newRatio) external {
@@ -290,6 +343,6 @@ contract Debuy is IDebuy {
         adverts[_id].sellerRatio -= diff;
         adverts[_id].buyerRatio += diff;
 
-        // TODO emit ratio decreased ?
+        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
     }
 }

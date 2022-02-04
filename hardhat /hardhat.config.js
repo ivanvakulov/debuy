@@ -1,14 +1,9 @@
 require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-etherscan");
+require("dotenv").config();
+require("hardhat-abi-exporter");
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
-  const accounts = await hre.ethers.getSigners();
-
-  for (const account of accounts) {
-    console.log(account.address);
-  }
-});
+const { PRIVATE_KEY, POLYGONSCAN_API_KEY } = process.env;
 
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
@@ -17,5 +12,21 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  solidity: "0.8.4",
+  networks: {
+    mumbai: {
+      url: `https://matic-mumbai.chainstacklabs.com`,
+      accounts: [PRIVATE_KEY],
+    },
+  },
+  solidity: "0.8.10",
+  etherscan: {
+    apiKey: POLYGONSCAN_API_KEY,
+  },
+  mocha: {
+    timeout: 200000,
+  },
+  abiExporter: {
+    path: "../src/abi",
+    runOnCompile: true,
+  },
 };
