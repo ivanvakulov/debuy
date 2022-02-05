@@ -11,7 +11,7 @@ export interface IAuthState {
 @Module({ name: AUTH_STORE, store, dynamic: true, namespaced: true, stateFactory: true })
 class AuthStore extends VuexModule implements IAuthState {
     account: string | null = null
-    user: User | null = Moralis.User.current() || null;
+    user: User | null = null;
     // get [GETTER_MAIN_SITE_LINK](): string {
     //     return ``
     // }
