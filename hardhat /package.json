@@ -19,5 +19,8 @@
     "ethers": "^5.5.4",
     "hardhat": "^2.8.3",
     "hardhat-abi-exporter": "^2.8.0"
+  },
+  "dependencies": {
+    "@remix-project/remixd": "^0.5.6"
   }
 }
