@@ -15,6 +15,15 @@
 
     <v-spacer></v-spacer>
 
+    <v-chip
+        v-if='account'
+        class='ma-2'
+        close
+        color='white'
+        text-color='primary'
+        @click:close='onLogoutClick'>
+        {{ accountShort }}
+    </v-chip>
     <v-btn
         v-if='account'
         class='mx-2'
@@ -42,14 +51,21 @@
 
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator';
-import { ACTION_LOGIN } from "@/store-consts";
+import { ACTION_LOGIN, ACTION_LOGOUT } from "@/store-consts";
 import { AuthModule } from "@/store/modules/AuthStore";
-import Moralis from "moralis";
+import { GETTER_SHORT_ADDRESS } from "@/store-consts/getterNames/modules/auth";
 
 @Component
 export default class Header extends Vue {
-    account: string | null = AuthModule.account || null
     isLoginLoading: boolean = false
+
+    get account(): string | null {
+        return AuthModule.account || null
+    }
+
+    get accountShort(): string | null {
+        return AuthModule[GETTER_SHORT_ADDRESS] || null
+    }
 
     async onLoginClick(): Promise<void> {
         this.isLoginLoading = true
@@ -59,8 +75,8 @@ export default class Header extends Vue {
         this.isLoginLoading = false
     }
 
-    mounted() {
-        console.log(Moralis.isWeb3Enabled())
+    async onLogoutClick(): Promise<void> {
+        await AuthModule[ACTION_LOGOUT]()
     }
 }
 </script>

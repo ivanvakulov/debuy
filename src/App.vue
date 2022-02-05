@@ -46,12 +46,18 @@
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator';
 import Header from "@/components/base/Header.vue";
+import { AuthModule } from "@/store/modules/AuthStore";
+import { ACTION_SET_MAIN_SUBSCRIBERS } from "@/store-consts";
 
 @Component({
     components: { Header }
 })
 export default class App extends Vue {
     sheet: boolean = false
+
+    async created() {
+        await AuthModule[ACTION_SET_MAIN_SUBSCRIBERS]()
+    }
 }
 </script>
 
