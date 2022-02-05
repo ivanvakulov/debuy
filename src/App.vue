@@ -1,29 +1,60 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
-  </div>
+<v-app>
+    <Header></Header>
+
+    <v-main>
+        <router-view></router-view>
+    </v-main>
+
+    <v-bottom-sheet v-model='sheet'>
+        <template v-slot:activator='{ on, attrs }'>
+            <v-btn
+                class='mx-5 my-5'
+                color='primary'
+                elevation='10'
+                x-large
+                fab
+                dark
+                fixed
+                right
+                bottom
+                v-bind='attrs'
+                v-on='on'>
+                <v-icon>
+                    mdi-plus
+                </v-icon>
+            </v-btn>
+        </template>
+        <v-sheet
+            class='text-center'
+            height='400px'>
+            <v-btn
+                class='mt-6'
+                text
+                color='error'
+                @click='sheet = !sheet'>
+                close
+            </v-btn>
+            <div class='my-3'>
+                This is a bottom sheet using the inset prop
+            </div>
+        </v-sheet>
+    </v-bottom-sheet>
+</v-app>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
-import HelloWorld from './components/HelloWorld.vue';
+import { Vue, Component } from 'vue-property-decorator';
+import Header from "@/components/base/Header.vue";
 
 @Component({
-  components: {
-    HelloWorld,
-  },
+    components: { Header }
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+    sheet: boolean = false
+}
 </script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+<style lang="scss">
+
 </style>
