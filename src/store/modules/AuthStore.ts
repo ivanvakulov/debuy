@@ -1,6 +1,14 @@
 import { Action, Module, VuexModule, Mutation, getModule } from 'vuex-module-decorators'
 import store from '@/store'
-import { ACTION_LOGIN, ACTION_LOGOUT, GETTER_SHORT_ADDRESS, ACTION_SET_MAIN_SUBSCRIBERS, AUTH_STORE, MUTATION_LOGIN } from "@/store-consts"
+import {
+    ACTION_LOGIN,
+    ACTION_LOGOUT,
+    GETTER_SHORT_ADDRESS,
+    ACTION_SET_MAIN_SUBSCRIBERS,
+    AUTH_STORE,
+    MUTATION_LOGIN,
+    ACTION_ENABLE_WEB3
+} from "@/store-consts"
 import Moralis from "moralis/dist/moralis.min.js";
 import { USER_ACCOUNT_KEY } from "@/helpers/consts";
 
@@ -27,6 +35,18 @@ class AuthStore extends VuexModule implements IAuthState {
     @Action({ rawError: true })
     async [ACTION_LOGIN](): Promise<void> {
         try {
+            await Moralis.authenticate()
+
+            this.context.commit(MUTATION_LOGIN, Moralis.account)
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve()
+        }
+    }
+
+    @Action({ rawError: true })
+    async [ACTION_ENABLE_WEB3](): Promise<void> {
+        try {
             await Moralis.enableWeb3()
 
             this.context.commit(MUTATION_LOGIN, Moralis.account)
@@ -38,6 +58,7 @@ class AuthStore extends VuexModule implements IAuthState {
 
     @Action({ rawError: true })
     async [ACTION_LOGOUT](): Promise<void> {
+        await Moralis.User.logOut()
         this.context.commit(MUTATION_LOGIN, null)
     }
 
@@ -45,7 +66,7 @@ class AuthStore extends VuexModule implements IAuthState {
     async [ACTION_SET_MAIN_SUBSCRIBERS](): Promise<void> {
         try {
             if ((this.context.state as IAuthState).account) {
-                await this.context.dispatch(ACTION_LOGIN)
+                await this.context.dispatch(ACTION_ENABLE_WEB3)
             }
 
             // Moralis.onWeb3Enabled((result) => {

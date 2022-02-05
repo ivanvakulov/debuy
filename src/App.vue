@@ -6,7 +6,9 @@
         <router-view></router-view>
     </v-main>
 
-    <v-bottom-sheet v-model='sheet'>
+    <v-bottom-sheet
+        v-model='sheet'
+        persistent>
         <template v-slot:activator='{ on, attrs }'>
             <v-btn
                 class='mx-5 my-5'
@@ -27,17 +29,8 @@
         </template>
         <v-sheet
             class='text-center'
-            height='400px'>
-            <v-btn
-                class='mt-6'
-                text
-                color='error'
-                @click='sheet = !sheet'>
-                close
-            </v-btn>
-            <div class='my-3'>
-                This is a bottom sheet using the inset prop
-            </div>
+            height='700px'>
+            <PostAdForm @close='closeSheet'></PostAdForm>
         </v-sheet>
     </v-bottom-sheet>
 </v-app>
@@ -46,14 +39,19 @@
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator';
 import Header from "@/components/base/Header.vue";
+import PostAdForm from "@/components/PostAdForm.vue";
 import { AuthModule } from "@/store/modules/AuthStore";
 import { ACTION_SET_MAIN_SUBSCRIBERS } from "@/store-consts";
 
 @Component({
-    components: { Header }
+    components: { Header, PostAdForm }
 })
 export default class App extends Vue {
     sheet: boolean = false
+
+    closeSheet() {
+        this.sheet = false
+    }
 
     async created() {
         await AuthModule[ACTION_SET_MAIN_SUBSCRIBERS]()

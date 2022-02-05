@@ -14,22 +14,6 @@ import Moralis from 'moralis/dist/moralis.min.js';
     // components: { HelloWorld }
 })
 export default class Home extends Vue {
-    async login() {
-        // let user = Moralis.User.current();
-        // if (!user) {
-
-        // }
-        // console.log(user.currentProvider.chainId)
-        // console.log("logged in user:", user);
-    }
-
-    // async logOut() {
-    //     // await Moralis.User.logOut();
-    //     console.log(Moralis.isWeb3Enabled(), "test");
-    //     await Moralis.deactivateWeb3()
-    //     console.log(Moralis.isWeb3Enabled(), "logged out");
-    // }
-
     async testCall() {
         const ABI =  [
             {
@@ -364,7 +348,7 @@ export default class Home extends Vue {
             }
         ]
         const readOptions = {
-            contractAddress: `0xf75097ddF95E8FEAa31Bc2FfA83641db954D8D52`,
+            contractAddress: ``,
             functionName: `adverts`,
             abi: ABI,
             params: {
