@@ -7,13 +7,101 @@ contract Debuy is IDebuy {
     uint256 constant DEPOSIT_MULTIPLIER = 2000;
     uint256 constant DEPOSIT_DENOMINATOR = 1000;
     uint256 constant ACTIVITY_TIMEOUT = 100 days;
-    uint256 public indexCounter;
 
-    Advert[] public adverts;
     mapping(address => uint256) public lastActivity;
+
+    Advert[] private _adverts;
+
+    mapping(address => mapping(uint256 => uint256)) private _advertsOfAddress;
+    mapping(uint256 => uint256) private _advertOfAddressIndex;
+    mapping(address => uint256) private _advertsOfAddressCount;
+
+    mapping(uint256 => uint256) private _advertsForListing;
+    mapping(uint256 => uint256) private _advertsForListingIndex;
+    uint256 private _advertsForListingCount;
+
+    function _addAdvertForListing(uint256 _id) private {
+        _advertsForListing[_advertsForListingCount] = _id;
+        _advertsForListingCount += 1;
+    }
+
+    function _removeAdvertFromListing(uint256 _id) private {
+        uint256 lastAdvertIndex = _advertsForListingCount - 1;
+        uint256 advertIndex = _advertsForListingIndex[_id];
+
+        if (advertIndex != lastAdvertIndex) {
+            uint256 lastAdvertId = _advertsForListing[lastAdvertIndex];
+
+            _advertsForListing[advertIndex] = lastAdvertId;
+            _advertsForListingIndex[lastAdvertId] = advertIndex;
+        }
+        _advertsForListingCount -= 1;
+
+        delete _advertsForListingIndex[_id];
+        delete _advertsForListing[lastAdvertIndex];
+    }
+
+    function advertsForListingCount() external view returns (uint256) {
+        return _advertsForListingCount;
+    }
+
+    function advertForListingByIndex(uint256 _index)
+        external
+        view
+        returns (uint256)
+    {
+        return _advertsForListing[_index];
+    }
+
+    function _addAdvertToAddress(address _address, uint256 _id) private {
+        uint256 length = _advertsOfAddressCount[_address];
+        _advertsOfAddress[_address][length] = _id;
+        _advertOfAddressIndex[_id] = length;
+        _advertsOfAddressCount[_address] += 1;
+    }
+
+    function _removeAdvertFromAddress(address _address, uint256 _id) private {
+        uint256 lastAdvertIndex = _advertsOfAddressCount[_address] - 1;
+        uint256 advertIndex = _advertOfAddressIndex[_id];
+
+        if (advertIndex != lastAdvertIndex) {
+            uint256 lastAdvertId = _advertsOfAddress[_address][lastAdvertIndex];
+
+            _advertsOfAddress[_address][advertIndex] = lastAdvertId;
+            _advertOfAddressIndex[lastAdvertId] = advertIndex;
+        }
+        _advertsOfAddressCount[_address] -= 1;
+
+        delete _advertOfAddressIndex[_id];
+        delete _advertsOfAddress[_address][lastAdvertIndex];
+    }
 
     function updateActivity() public {
         lastActivity[msg.sender] = block.timestamp;
+    }
+
+    function advert(uint256 _id) external view returns (Advert memory) {
+        return _adverts[_id];
+    }
+
+    function totalAdvers() external view returns (uint256) {
+        return _adverts.length;
+    }
+
+    function advertsOfAddressCount(address _address)
+        external
+        view
+        returns (uint256)
+    {
+        return _advertsOfAddressCount[_address];
+    }
+
+    function advertOfAddressByIndex(address _address, uint256 _index)
+        external
+        view
+        returns (uint256)
+    {
+        return _advertsOfAddress[_address][_index];
     }
 
     // if _buyer set to zero address then anyone could apply to this advert
@@ -25,7 +113,7 @@ contract Debuy is IDebuy {
         string calldata _region,
         string calldata _ipfs,
         address _buyer
-    ) external payable returns (uint256 index) {
+    ) external payable returns (uint256 id) {
         Status status = Status.Created;
         if (msg.value > 0) {
             require(
@@ -35,7 +123,7 @@ contract Debuy is IDebuy {
             );
             status = Status.SellerBacked;
         }
-        adverts.push(
+        _adverts.push(
             Advert({
                 createdAt: block.timestamp,
                 status: status,
@@ -51,18 +139,26 @@ contract Debuy is IDebuy {
             })
         );
 
-        emit AdvertCreated(msg.sender, _buyer, indexCounter);
+        _addAdvertToAddress(msg.sender, _adverts.length - 1);
+        if (_buyer != address(0)) {
+            _addAdvertToAddress(_buyer, _adverts.length - 1);
+        } else {
+            _addAdvertForListing(_adverts.length - 1);
+        }
+
+        emit AdvertCreated(msg.sender, _buyer, _adverts.length - 1);
 
         updateActivity();
-        indexCounter++;
-        return indexCounter - 1;
+
+        return _adverts.length - 1;
     }
 
-    function applyToAdvert(uint256 _id) external payable override {
-        if (msg.sender == adverts[_id].seller) {
+    function applyToAdvert(uint256 _id) external payable {
+        if (msg.sender == _adverts[_id].seller) {
             applyToAdvertBySeller(_id);
         } else if (
-            msg.sender == adverts[_id].buyer || adverts[_id].buyer == address(0)
+            msg.sender == _adverts[_id].buyer ||
+            _adverts[_id].buyer == address(0)
         ) {
             applyToAdvertByBuyer(_id);
         } else {
@@ -77,31 +173,31 @@ contract Debuy is IDebuy {
         // );
         require(
             msg.value ==
-                (adverts[_id].price * adverts[_id].sellerRatio) /
+                (_adverts[_id].price * _adverts[_id].sellerRatio) /
                     DEPOSIT_DENOMINATOR,
             "Wrong deposit value."
         );
-        if (adverts[_id].status == Status.Created) {
-            adverts[_id].status = Status.SellerBacked;
+        if (_adverts[_id].status == Status.Created) {
+            _adverts[_id].status = Status.SellerBacked;
 
             emit SellerBacked(
-                adverts[_id].seller,
-                adverts[_id].buyer,
+                _adverts[_id].seller,
+                _adverts[_id].buyer,
                 _id,
-                (adverts[_id].price * adverts[_id].sellerRatio) /
+                (_adverts[_id].price * _adverts[_id].sellerRatio) /
                     DEPOSIT_DENOMINATOR
             );
-        } else if (adverts[_id].status == Status.BuyerBacked) {
-            adverts[_id].status = Status.Active;
+        } else if (_adverts[_id].status == Status.BuyerBacked) {
+            _adverts[_id].status = Status.Active;
 
             emit AdvertActivated(
-                adverts[_id].seller,
-                adverts[_id].buyer,
+                _adverts[_id].seller,
+                _adverts[_id].buyer,
                 _id,
-                (adverts[_id].price *
-                    adverts[_id].sellerRatio +
-                    adverts[_id].price *
-                    adverts[_id].buyerRatio) / DEPOSIT_DENOMINATOR
+                (_adverts[_id].price *
+                    _adverts[_id].sellerRatio +
+                    _adverts[_id].price *
+                    _adverts[_id].buyerRatio) / DEPOSIT_DENOMINATOR
             );
         } else {
             revert("Already applied.");
@@ -119,89 +215,99 @@ contract Debuy is IDebuy {
         // );
         require(
             msg.value ==
-                (adverts[_id].price * adverts[_id].buyerRatio) /
+                (_adverts[_id].price * _adverts[_id].buyerRatio) /
                     DEPOSIT_DENOMINATOR,
             "Wrong deposit value."
         );
-        if (adverts[_id].status == Status.Created) {
-            adverts[_id].status = Status.BuyerBacked;
+        if (_adverts[_id].status == Status.Created) {
+            _adverts[_id].status = Status.BuyerBacked;
 
             emit BuyerBacked(
-                adverts[_id].seller,
-                adverts[_id].buyer,
+                _adverts[_id].seller,
+                _adverts[_id].buyer,
                 _id,
-                (adverts[_id].price * adverts[_id].buyerRatio) /
+                (_adverts[_id].price * _adverts[_id].buyerRatio) /
                     DEPOSIT_DENOMINATOR
             );
-        } else if (adverts[_id].status == Status.SellerBacked) {
-            adverts[_id].status = Status.Active;
+        } else if (_adverts[_id].status == Status.SellerBacked) {
+            _adverts[_id].status = Status.Active;
 
             emit AdvertActivated(
-                adverts[_id].seller,
-                adverts[_id].buyer,
+                _adverts[_id].seller,
+                _adverts[_id].buyer,
                 _id,
-                (adverts[_id].price *
-                    adverts[_id].sellerRatio +
-                    adverts[_id].price *
-                    adverts[_id].buyerRatio) / DEPOSIT_DENOMINATOR
+                (_adverts[_id].price *
+                    _adverts[_id].sellerRatio +
+                    _adverts[_id].price *
+                    _adverts[_id].buyerRatio) / DEPOSIT_DENOMINATOR
             );
         } else {
             revert("Already applied.");
         }
-        adverts[_id].buyer = msg.sender;
+        if (_adverts[_id].buyer == address(0)) {
+            _adverts[_id].buyer = msg.sender;
+            _addAdvertToAddress(msg.sender, _id);
+            _removeAdvertFromListing(_id);
+        }
 
         updateActivity();
     }
 
-    function withdraw(uint256 _id) external {
+    function withdraw(uint256 _id) public {
         require(
-            adverts[_id].status == Status.BuyerBacked ||
-                adverts[_id].status == Status.SellerBacked,
+            _adverts[_id].status == Status.BuyerBacked ||
+                _adverts[_id].status == Status.SellerBacked,
             "Can't withdraw from this advert."
         );
-        if (msg.sender == adverts[_id].buyer) {
-            adverts[_id].status = Status.Created;
+        if (msg.sender == _adverts[_id].buyer) {
+            _adverts[_id].status = Status.Created;
 
-            uint256 value = (adverts[_id].price * adverts[_id].buyerRatio) /
+            uint256 value = (_adverts[_id].price * _adverts[_id].buyerRatio) /
                 DEPOSIT_DENOMINATOR;
-            (bool sent, ) = adverts[_id].buyer.call{value: value}("");
+            (bool sent, ) = _adverts[_id].buyer.call{value: value}("");
             require(sent, "Failed to send Ether");
             emit Withdrawn(
-                adverts[_id].seller,
-                adverts[_id].buyer,
+                _adverts[_id].seller,
+                _adverts[_id].buyer,
                 _id,
-                adverts[_id].buyer
+                _adverts[_id].buyer
             );
-        } else if (msg.sender == adverts[_id].seller) {
-            adverts[_id].status = Status.Created;
 
-            uint256 value = (adverts[_id].price * adverts[_id].sellerRatio) /
+            _removeAdvertFromAddress(_adverts[_id].buyer, _id);
+            _addAdvertForListing(_id);
+            _adverts[_id].buyer = address(0);
+        } else if (msg.sender == _adverts[_id].seller) {
+            _adverts[_id].status = Status.Created;
+
+            uint256 value = (_adverts[_id].price * _adverts[_id].sellerRatio) /
                 DEPOSIT_DENOMINATOR;
-            (bool sent, ) = adverts[_id].seller.call{value: value}("");
+            (bool sent, ) = _adverts[_id].seller.call{value: value}("");
             require(sent, "Failed to send Ether");
             emit Withdrawn(
-                adverts[_id].seller,
-                adverts[_id].buyer,
+                _adverts[_id].seller,
+                _adverts[_id].buyer,
                 _id,
-                adverts[_id].seller
+                _adverts[_id].seller
             );
         } else {
             revert("You are not a part of this advert.");
         }
+
+        updateActivity();
     }
 
     function forceClose(uint256 _id) external {
-        require(adverts[_id].status == Status.Active, "Advert is not active.");
+        require(_adverts[_id].status == Status.Active, "Advert is not active.");
 
         uint256 lastActive;
         address side;
 
-        if (msg.sender == adverts[_id].seller) {
-            side = adverts[_id].seller;
-            lastActive = lastActivity[adverts[_id].buyer];
-        } else if (msg.sender == adverts[_id].buyer) {
-            side = adverts[_id].buyer;
-            lastActive = lastActivity[adverts[_id].seller];
+        if (msg.sender == _adverts[_id].seller) {
+            side = _adverts[_id].seller;
+            lastActive = lastActivity[_adverts[_id].buyer];
+        } else if (msg.sender == _adverts[_id].buyer) {
+            side = _adverts[_id].buyer;
+            lastActive = lastActivity[_adverts[_id].seller];
         } else {
             revert("You are not a part of this advert.");
         }
@@ -211,74 +317,81 @@ contract Debuy is IDebuy {
             "Activity timeout not reached."
         );
 
-        adverts[_id].status = Status.ForceClosed;
+        _adverts[_id].status = Status.ForceClosed;
 
-        uint256 value = (adverts[_id].price *
-            adverts[_id].sellerRatio +
-            adverts[_id].price *
-            adverts[_id].buyerRatio) / DEPOSIT_DENOMINATOR;
+        uint256 value = (_adverts[_id].price *
+            _adverts[_id].sellerRatio +
+            _adverts[_id].price *
+            _adverts[_id].buyerRatio) / DEPOSIT_DENOMINATOR;
         (bool sent, ) = msg.sender.call{value: value}("");
         require(sent, "Failed to send Ether");
 
-        emit ForceClosed(adverts[_id].seller, adverts[_id].buyer, _id, side);
+        emit ForceClosed(_adverts[_id].seller, _adverts[_id].buyer, _id, side);
 
         updateActivity();
     }
 
     function confirmClose(uint256 _id) external {
-        require(msg.sender == adverts[_id].buyer, "You are not a buyer.");
-        require(adverts[_id].status == Status.Active, "Advert is not active.");
+        require(msg.sender == _adverts[_id].buyer, "You are not a buyer.");
+        require(_adverts[_id].status == Status.Active, "Advert is not active.");
 
-        adverts[_id].status = Status.Finished;
+        _adverts[_id].status = Status.Finished;
 
-        uint256 value = (adverts[_id].price * adverts[_id].sellerRatio) /
+        uint256 value = (_adverts[_id].price * _adverts[_id].sellerRatio) /
             DEPOSIT_DENOMINATOR +
-            adverts[_id].price;
-        (bool sent, ) = adverts[_id].seller.call{value: value}("");
+            _adverts[_id].price;
+        (bool sent, ) = _adverts[_id].seller.call{value: value}("");
         require(sent, "Failed to send Ether");
 
         value =
-            (adverts[_id].price * adverts[_id].buyerRatio) /
+            (_adverts[_id].price * _adverts[_id].buyerRatio) /
             DEPOSIT_DENOMINATOR -
-            adverts[_id].price;
-        (sent, ) = adverts[_id].buyer.call{value: value}("");
+            _adverts[_id].price;
+        (sent, ) = _adverts[_id].buyer.call{value: value}("");
         require(sent, "Failed to send Ether");
 
-        emit AdvertFinished(adverts[_id].seller, adverts[_id].buyer, _id);
+        emit AdvertFinished(_adverts[_id].seller, _adverts[_id].buyer, _id);
 
         updateActivity();
     }
 
-    function updateBuyer(uint256 _id, address _newBuyer) external {
-        require(msg.sender == adverts[_id].seller, "You are not a seller.");
+    function updateBuyer(uint256 _id, address _newBuyer) public {
+        require(msg.sender == _adverts[_id].seller, "You are not a seller.");
 
-        if (adverts[_id].status == Status.BuyerBacked) {
-            adverts[_id].status = Status.Created;
+        if (_adverts[_id].status == Status.BuyerBacked) {
+            _adverts[_id].status = Status.Created;
 
-            uint256 value = (adverts[_id].price * adverts[_id].buyerRatio) /
+            uint256 value = (_adverts[_id].price * _adverts[_id].buyerRatio) /
                 DEPOSIT_DENOMINATOR;
-            (bool sent, ) = adverts[_id].buyer.call{value: value}("");
+            (bool sent, ) = _adverts[_id].buyer.call{value: value}("");
             require(sent, "Failed to send Ether");
-
-            adverts[_id].buyer = _newBuyer;
         } else if (
-            adverts[_id].status == Status.SellerBacked ||
-            adverts[_id].status == Status.Created
-        ) {
-            adverts[_id].buyer = _newBuyer;
-        } else {
+            _adverts[_id].status == Status.SellerBacked ||
+            _adverts[_id].status == Status.Created
+        ) {} else {
             revert("Advert can't be updated.");
         }
+        if (_adverts[_id].buyer != _newBuyer) {
+            if (_adverts[_id].buyer != address(0)) {
+                _removeAdvertFromAddress(_adverts[_id].buyer, _id);
+            }
+            if (_newBuyer != address(0)) {
+                _addAdvertToAddress(_newBuyer, _id);
+            } else {
+                _addAdvertForListing(_id);
+            }
+        }
+        _adverts[_id].buyer = _newBuyer;
 
-        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
+        emit AdvertUpdated(_adverts[_id].seller, _adverts[_id].buyer, _id);
 
         updateActivity();
     }
 
     modifier onlySellerOnCreated(uint256 _id) {
-        require(msg.sender == adverts[_id].seller, "You are not a seller.");
+        require(msg.sender == _adverts[_id].seller, "You are not a seller.");
         require(
-            adverts[_id].status == Status.Created,
+            _adverts[_id].status == Status.Created,
             "Only empty advert could be updated."
         );
         _;
@@ -288,61 +401,87 @@ contract Debuy is IDebuy {
         external
         onlySellerOnCreated(_id)
     {
-        adverts[_id].price = _newPrice;
+        _adverts[_id].price = _newPrice;
 
-        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
+        emit AdvertUpdated(_adverts[_id].seller, _adverts[_id].buyer, _id);
+        updateActivity();
     }
 
     function updateTitle(uint256 _id, string calldata _newTitle)
         external
         onlySellerOnCreated(_id)
     {
-        adverts[_id].title = _newTitle;
+        _adverts[_id].title = _newTitle;
 
-        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
+        emit AdvertUpdated(_adverts[_id].seller, _adverts[_id].buyer, _id);
+        updateActivity();
     }
 
     function updateDescription(uint256 _id, string calldata _newDescription)
         external
         onlySellerOnCreated(_id)
     {
-        adverts[_id].description = _newDescription;
+        _adverts[_id].description = _newDescription;
 
-        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
+        emit AdvertUpdated(_adverts[_id].seller, _adverts[_id].buyer, _id);
+        updateActivity();
     }
 
     function updateIpfs(uint256 _id, string calldata _newIpfs)
         external
         onlySellerOnCreated(_id)
     {
-        adverts[_id].ipfs = _newIpfs;
+        _adverts[_id].ipfs = _newIpfs;
 
-        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
+        emit AdvertUpdated(_adverts[_id].seller, _adverts[_id].buyer, _id);
+        updateActivity();
     }
 
     function updateRegion(uint256 _id, string calldata _newRegion)
         external
         onlySellerOnCreated(_id)
     {
-        adverts[_id].region = _newRegion;
+        _adverts[_id].region = _newRegion;
 
-        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
+        emit AdvertUpdated(_adverts[_id].seller, _adverts[_id].buyer, _id);
+        updateActivity();
+    }
+
+    function deleteAdvert(uint256 _id) external {
+        require(msg.sender == _adverts[_id].seller, "You are not a seller.");
+
+        if (_adverts[_id].status == Status.Created) {} else if (
+            _adverts[_id].status == Status.SellerBacked
+        ) {
+            withdraw(_id);
+        } else if (_adverts[_id].status == Status.BuyerBacked) {
+            updateBuyer(_id, address(0));
+        } else {
+            revert("Advert can't be deleted.");
+        }
+
+        _adverts[_id].status = Status.Deleted;
+        _removeAdvertFromListing(_id);
+
+        emit AdvertDeleted(_adverts[_id].seller, _adverts[_id].buyer, _id);
+        updateActivity();
     }
 
     function decreaseSellerRatio(uint256 _id, uint256 _newRatio) external {
-        require(msg.sender == adverts[_id].seller, "You are not a seller.");
+        require(msg.sender == _adverts[_id].seller, "You are not a seller.");
         require(
-            adverts[_id].status == Status.Active,
+            _adverts[_id].status == Status.Active,
             "Advert should be active to update ratio."
         );
         require(
-            _newRatio < adverts[_id].sellerRatio,
+            _newRatio < _adverts[_id].sellerRatio,
             "Seller ratio could be only decreased."
         );
-        uint256 diff = adverts[_id].sellerRatio - _newRatio;
-        adverts[_id].sellerRatio -= diff;
-        adverts[_id].buyerRatio += diff;
+        uint256 diff = _adverts[_id].sellerRatio - _newRatio;
+        _adverts[_id].sellerRatio -= diff;
+        _adverts[_id].buyerRatio += diff;
 
-        emit AdvertUpdated(adverts[_id].seller, adverts[_id].buyer, _id);
+        emit AdvertUpdated(_adverts[_id].seller, _adverts[_id].buyer, _id);
+        updateActivity();
     }
 }
