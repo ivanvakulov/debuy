@@ -1,7 +1,8 @@
 <template>
 <v-card
     :loading='isAdvertLoading'
-    class='mx-auto my-12'
+    height='432px'
+    class='b-advert mx-auto my-12'
     @click='goToAdvert'>
     <template slot='progress'>
         <v-progress-linear
@@ -10,9 +11,15 @@
             indeterminate></v-progress-linear>
     </template>
 
+    <v-skeleton-loader
+        v-if='isAdvertLoading'
+        width='100%'
+        height='250px'
+        type='image'></v-skeleton-loader>
     <v-img
-        v-if='ipfsPhoto'
+        v-else-if='ipfsPhoto'
         height='250'
+        lazy-src='@/assets/blur-image.png'
         :src='ipfsPhoto'></v-img>
     <v-img
         v-else
@@ -77,7 +84,8 @@ export default class AdvertItemCard extends Vue {
     }
 
     get advertDescription(): string {
-        return this.advert?.description || ``
+        // @ts-ignore
+        return this.advert?.description?.length > 100 ? `${this.advert?.description?.substr(0, 100)}...` : this.advert?.description || ``
     }
 
     get createdAt(): string {
@@ -116,5 +124,12 @@ export default class AdvertItemCard extends Vue {
 </script>
 
 <style lang="sass">
+.b-advert
+
+    .v-card__title
+        white-space: nowrap
+        overflow: hidden
+        text-overflow: ellipsis
+        display: block
 
 </style>

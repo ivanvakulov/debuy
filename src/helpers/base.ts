@@ -13,4 +13,9 @@ const omit =
         }, {} as T
     )
 
-export { isNil, omit }
+function getUniqueNumberId(id: number, increment: number = 3): number {
+    if (id >= Number.MAX_VALUE || `${id}`.length + increment >= `${Number.MAX_VALUE}`.length) { return id }
+    return Number(`${id}${Math.round(Math.random() * (10 ** increment))}`)
+}
+
+export { isNil, omit, getUniqueNumberId }

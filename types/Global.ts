@@ -15,3 +15,17 @@ export type ExecuteFunctionOptions = {
     msgValue?: string;
     params?: ExecuteFunctionParams;
 }
+
+export type ObserverMixinOptions = {
+    el: HTMLElement,
+    root?: HTMLElement,
+    rootMargin?: string,
+    threshold?: number,
+    callback: (options: ObserverMixinOptions) => Promise<void> | void,
+}
+
+export type CacheObserver = {
+    id: number
+    observer: IntersectionObserver
+    el: HTMLElement
+}

@@ -18,6 +18,7 @@
                 <v-carousel-item
                     v-for='img in ipfsPhotos'
                     :src='img'
+                    lazy-src='@/assets/blur-image.png'
                     :key='img'>
                 </v-carousel-item>
             </v-carousel>
