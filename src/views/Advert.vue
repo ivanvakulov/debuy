@@ -158,22 +158,32 @@ export default class AdvertPage extends Vue {
         }
     }
 
-    created() {
-        if (this.$route.params.id) {
-            this.unubscribe = Moralis.onWeb3Enabled(async() => {
-                this.advert = await AdvertModule[ACTION_GET_ADVERT](this.$route.params.id)
+    async loadAdvert() {
+        this.advert = await AdvertModule[ACTION_GET_ADVERT](this.$route.params.id)
 
-                if (!this.advert) {
-                    this.$router.push({ name: `HomePage` })
-                }
-            })
+        if (!this.advert) {
+            this.$router.push({ name: `HomePage` })
+        }
+    }
+
+    async created() {
+        if (this.$route.params.id) {
+            if (Moralis.isWeb3Enabled()) {
+                await this.loadAdvert()
+            } else {
+                this.unubscribe = Moralis.onWeb3Enabled(async() => {
+                    await this.loadAdvert()
+                })
+            }
         } else {
             this.$router.push({ name: `HomePage` })
         }
     }
 
     beforeDestroy() {
-        this.unubscribe()
+        if (this.unubscribe) {
+            this.unubscribe()
+        }
     }
 }
 </script>
