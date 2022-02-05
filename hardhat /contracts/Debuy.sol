@@ -8,13 +8,50 @@ contract Debuy is IDebuy {
     uint256 constant DEPOSIT_DENOMINATOR = 1000;
     uint256 constant ACTIVITY_TIMEOUT = 100 days;
 
+    mapping(address => uint256) public lastActivity;
+
     Advert[] private _adverts;
 
     mapping(address => mapping(uint256 => uint256)) private _advertsOfAddress;
     mapping(uint256 => uint256) private _advertOfAddressIndex;
     mapping(address => uint256) private _advertsOfAddressCount;
 
-    mapping(address => uint256) public lastActivity;
+    mapping(uint256 => uint256) private _advertsForListing;
+    mapping(uint256 => uint256) private _advertsForListingIndex;
+    uint256 private _advertsForListingCount;
+
+    function _addAdvertForListing(uint256 _id) private {
+        _advertsForListing[_advertsForListingCount] = _id;
+        _advertsForListingCount += 1;
+    }
+
+    function _removeAdvertFromListing(uint256 _id) private {
+        uint256 lastAdvertIndex = _advertsForListingCount - 1;
+        uint256 advertIndex = _advertsForListingIndex[_id];
+
+        if (advertIndex != lastAdvertIndex) {
+            uint256 lastAdvertId = _advertsForListing[lastAdvertIndex];
+
+            _advertsForListing[advertIndex] = lastAdvertId;
+            _advertsForListingIndex[lastAdvertId] = advertIndex;
+        }
+        _advertsForListingCount -= 1;
+
+        delete _advertsForListingIndex[_id];
+        delete _advertsForListing[lastAdvertIndex];
+    }
+
+    function advertsForListingCount() external view returns (uint256) {
+        return _advertsForListingCount;
+    }
+
+    function advertForListingByIndex(uint256 _index)
+        external
+        view
+        returns (uint256)
+    {
+        return _advertsForListing[_index];
+    }
 
     function _addAdvertToAddress(address _address, uint256 _id) private {
         uint256 length = _advertsOfAddressCount[_address];
@@ -24,19 +61,19 @@ contract Debuy is IDebuy {
     }
 
     function _removeAdvertFromAddress(address _address, uint256 _id) private {
-        uint256 lastTokenIndex = _advertsOfAddressCount[_address] - 1;
+        uint256 lastAdvertIndex = _advertsOfAddressCount[_address] - 1;
         uint256 advertIndex = _advertOfAddressIndex[_id];
 
-        if (advertIndex != lastTokenIndex) {
-            uint256 lastTokenId = _advertsOfAddress[_address][lastTokenIndex];
+        if (advertIndex != lastAdvertIndex) {
+            uint256 lastAdvertId = _advertsOfAddress[_address][lastAdvertIndex];
 
-            _advertsOfAddress[_address][advertIndex] = lastTokenId; // Move the last token to the slot of the to-delete token
-            _advertOfAddressIndex[lastTokenId] = advertIndex; // Update the moved token's index
+            _advertsOfAddress[_address][advertIndex] = lastAdvertId;
+            _advertOfAddressIndex[lastAdvertId] = advertIndex;
         }
         _advertsOfAddressCount[_address] -= 1;
 
         delete _advertOfAddressIndex[_id];
-        delete _advertsOfAddress[_address][lastTokenIndex];
+        delete _advertsOfAddress[_address][lastAdvertIndex];
     }
 
     function updateActivity() public {
@@ -105,6 +142,8 @@ contract Debuy is IDebuy {
         _addAdvertToAddress(msg.sender, _adverts.length - 1);
         if (_buyer != address(0)) {
             _addAdvertToAddress(_buyer, _adverts.length - 1);
+        } else {
+            _addAdvertForListing(_adverts.length - 1);
         }
 
         emit AdvertCreated(msg.sender, _buyer, _adverts.length - 1);
@@ -208,6 +247,7 @@ contract Debuy is IDebuy {
         if (_adverts[_id].buyer == address(0)) {
             _adverts[_id].buyer = msg.sender;
             _addAdvertToAddress(msg.sender, _id);
+            _removeAdvertFromListing(_id);
         }
 
         updateActivity();
@@ -234,6 +274,7 @@ contract Debuy is IDebuy {
             );
 
             _removeAdvertFromAddress(_adverts[_id].buyer, _id);
+            _addAdvertForListing(_id);
             _adverts[_id].buyer = address(0);
         } else if (msg.sender == _adverts[_id].seller) {
             _adverts[_id].status = Status.Created;
@@ -330,12 +371,15 @@ contract Debuy is IDebuy {
         ) {} else {
             revert("Advert can't be updated.");
         }
-
-        if (_adverts[_id].buyer != address(0)) {
-            _removeAdvertFromAddress(_adverts[_id].buyer, _id);
-        }
-        if (_newBuyer != address(0)) {
-            _addAdvertToAddress(_newBuyer, _id);
+        if (_adverts[_id].buyer != _newBuyer) {
+            if (_adverts[_id].buyer != address(0)) {
+                _removeAdvertFromAddress(_adverts[_id].buyer, _id);
+            }
+            if (_newBuyer != address(0)) {
+                _addAdvertToAddress(_newBuyer, _id);
+            } else {
+                _addAdvertForListing(_id);
+            }
         }
         _adverts[_id].buyer = _newBuyer;
 
@@ -417,6 +461,7 @@ contract Debuy is IDebuy {
         }
 
         _adverts[_id].status = Status.Deleted;
+        _removeAdvertFromListing(_id);
 
         emit AdvertDeleted(_adverts[_id].seller, _adverts[_id].buyer, _id);
         updateActivity();
