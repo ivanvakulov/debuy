@@ -12,21 +12,29 @@ const { PRIVATE_KEY, POLYGONSCAN_API_KEY } = process.env;
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  networks: {
-    mumbai: {
-      url: `https://matic-mumbai.chainstacklabs.com`,
-      accounts: [PRIVATE_KEY],
+    networks: {
+        mumbai: {
+            url: `https://matic-mumbai.chainstacklabs.com`,
+            accounts: [PRIVATE_KEY],
+        },
     },
-  },
-  solidity: "0.8.10",
-  etherscan: {
-    apiKey: POLYGONSCAN_API_KEY,
-  },
-  mocha: {
-    timeout: 200000,
-  },
-  abiExporter: {
-    path: "../src/abi",
-    runOnCompile: true,
-  },
+    solidity: {
+        version: "0.8.4",
+        settings: {
+            optimizer: {
+                enabled: true,
+                runs: 200,
+            },
+        },
+    },
+    etherscan: {
+        apiKey: POLYGONSCAN_API_KEY,
+    },
+    mocha: {
+        timeout: 200000,
+    },
+    abiExporter: {
+        path: "../src/abi",
+        runOnCompile: true,
+    },
 };
