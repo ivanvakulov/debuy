@@ -13,8 +13,10 @@
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "baseUrl": ".",
+    "resolveJsonModule": true,
     "types": [
-      "webpack-env"
+      "webpack-env",
+      "moralis/types"
     ],
     "paths": {
       "@/*": [
@@ -29,6 +31,7 @@
     ]
   },
   "include": [
+    "types/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
