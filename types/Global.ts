@@ -3,6 +3,7 @@ export type Chain = {
     id: string
     symbol: string
     address: string
+    explorer: string
 }
 
 export type ExecuteFunctionParams = Record<string, any>;

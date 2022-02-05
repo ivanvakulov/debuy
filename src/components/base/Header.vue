@@ -4,13 +4,15 @@
     color='primary'
     dark>
     <div class='d-flex align-center'>
-        <v-img
-            alt='Debuy'
-            class='shrink mt-1 hidden-sm-and-down'
-            contain
-            min-width='100'
-            src='@/assets/logo-white.svg'
-            width='100'></v-img>
+        <router-link :to='{ name: "HomePage" }'>
+            <v-img
+                alt='Debuy'
+                class='shrink mt-1 hidden-sm-and-down'
+                contain
+                min-width='100'
+                src='@/assets/logo-white.svg'
+                width='100'></v-img>
+        </router-link>
     </div>
 
     <v-spacer></v-spacer>

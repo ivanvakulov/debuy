@@ -96,7 +96,7 @@ import { Chain } from "@/../types/Global.ts";
 import { ACTION_UPLOAD_ADVERT, GETTER_ACTIVE_CHAIN } from "@/store-consts";
 import { GlobalModule } from "@/store/modules/GlobalStore";
 import { AdvertModule } from "@/store/modules/AdvertStore";
-import { DEFAULT_ZERO_ADDRESS, ERC20_ADDRESS_LENGTH } from "@/helpers/consts";
+import { DEFAULT_ZERO_ADDRESS, ERC20_ADDRESS_LENGTH, NO_IMAGE_SETTLED_KEY } from "@/helpers/consts";
 import Moralis from "moralis/dist/moralis.min.js";
 import { isNil } from "@/helpers/base";
 
@@ -152,7 +152,7 @@ export default class PostAdForm extends Vue {
         const id = await AdvertModule[ACTION_UPLOAD_ADVERT]({
             _title: this.title || ``,
             _description: this.description || ``,
-            _ipfs: this.imageHash || ``,
+            _ipfs: this.imageHash || NO_IMAGE_SETTLED_KEY,
             _price: Moralis.Units.ETH(this.price) || 0,
             _region: this.region || ``,
             _buyer: DEFAULT_ZERO_ADDRESS

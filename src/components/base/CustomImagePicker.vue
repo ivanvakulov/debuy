@@ -14,7 +14,6 @@
         class='shrink mt-1 hidden-sm-and-down'
         contain
         max-width='100%'
-        max-height='100%'
         :src='imageUrl'></v-img>
     <input type='file'
            accept='image/*'
@@ -26,7 +25,7 @@
 import { Vue, Component, Emit } from 'vue-property-decorator';
 import { AdvertModule } from "@/store/modules/AdvertStore";
 import { ACTION_UPLOAD_IMAGE } from "@/store-consts";
-import { MORALIS_IPFS_PREFIX } from "@/helpers/consts";
+import { getIpfsUrl } from "@/helpers/contract";
 
 @Component
 export default class CustomImagePicker extends Vue {
@@ -41,7 +40,9 @@ export default class CustomImagePicker extends Vue {
             // @ts-ignore
             const hash = await AdvertModule[ACTION_UPLOAD_IMAGE]((e.target as HTMLInputElement).files[0])
 
-            this.imageUrl = `${MORALIS_IPFS_PREFIX}${hash}`
+            if (hash) {
+                this.imageUrl = getIpfsUrl(hash)
+            }
 
             this.emitHash(hash)
             this.isImageLoading = false

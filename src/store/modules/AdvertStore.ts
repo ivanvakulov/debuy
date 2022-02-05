@@ -1,19 +1,34 @@
 import { Action, Module, VuexModule, getModule } from 'vuex-module-decorators'
 import store from '@/store'
 import {
+    ACTION_GET_ADVERT,
     ACTION_UPLOAD_ADVERT,
     ACTION_UPLOAD_IMAGE,
     ADVERT_STORE
 } from "@/store-consts"
 import Moralis from "moralis/dist/moralis.min.js";
-import { getContractParameters } from "@/helpers/contract";
-import { CreateAdvertParams } from "../../../types/Advert";
+import { getContractParameters, populateAdvertResponse } from "@/helpers/contract";
+import { Advert, CreateAdvertParams } from "../../../types/Advert";
 
 export interface IAdvertState {
 }
 
 @Module({ name: ADVERT_STORE, store, dynamic: true, namespaced: true, stateFactory: true })
 class AdvertStore extends VuexModule implements IAdvertState {
+
+    @Action({ rawError: true })
+    async [ACTION_GET_ADVERT](id: string): Promise<Advert | null> {
+        try {
+            const options = getContractParameters(`adverts`, { _id: id })
+
+            const response = await Moralis.executeFunction(options)
+
+            return populateAdvertResponse(response)
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve(null)
+        }
+    }
 
     @Action({ rawError: true })
     async [ACTION_UPLOAD_IMAGE](fileInput: File): Promise<string | null> {
@@ -33,6 +48,7 @@ class AdvertStore extends VuexModule implements IAdvertState {
         try {
             const options = getContractParameters(`createAdvert`, params)
 
+            console.log(options)
             const transaction = await Moralis.executeFunction(options)
 
             const response = await transaction.wait();

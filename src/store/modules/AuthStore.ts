@@ -11,6 +11,7 @@ import {
 } from "@/store-consts"
 import Moralis from "moralis/dist/moralis.min.js";
 import { USER_ACCOUNT_KEY } from "@/helpers/consts";
+import { getShortAddress } from "@/helpers/contract";
 
 export interface IAuthState {
     account: string | null
@@ -23,7 +24,7 @@ class AuthStore extends VuexModule implements IAuthState {
     get [GETTER_SHORT_ADDRESS](): string {
         if (!this.account) return ``
 
-        return `${this.account.substring(0, 5)}...${this.account.slice(-4)}`
+        return getShortAddress(this.account)
     }
 
     @Mutation
