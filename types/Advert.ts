@@ -7,6 +7,10 @@ export type CreateAdvertParams = {
     _buyer: string
 }
 
+export type EditAdvertParams = CreateAdvertParams & {
+    _id: string | number
+}
+
 export type Advert = {
     buyer: string
     buyerRatio: number

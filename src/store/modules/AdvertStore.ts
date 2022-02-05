@@ -19,7 +19,7 @@ class AdvertStore extends VuexModule implements IAdvertState {
     @Action({ rawError: true })
     async [ACTION_GET_ADVERT](id: string): Promise<Advert | null> {
         try {
-            const options = getContractParameters(`adverts`, { _id: id })
+            const options = getContractParameters(`advert`, { _id: id })
 
             const response = await Moralis.executeFunction(options)
 
