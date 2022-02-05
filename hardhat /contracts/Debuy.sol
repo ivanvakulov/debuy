@@ -487,7 +487,7 @@ contract Debuy is IDebuy {
         updateActivity();
     }
 
-    function decreaseSellerRatio(uint256 _id, uint256 _newRatio) external {
+    function decreaseSellerRatio(uint256 _id, uint256 _newRatio) public {
         require(msg.sender == _adverts[_id].seller, "You are not a seller.");
         require(
             _adverts[_id].status == Status.Active,
@@ -503,5 +503,43 @@ contract Debuy is IDebuy {
 
         emit AdvertUpdated(_adverts[_id].seller, _adverts[_id].buyer, _id);
         updateActivity();
+    }
+
+    function provideDiscount(uint256 _id, uint256 _discount) external {
+        require(
+            _adverts[_id].sellerRatio > DEPOSIT_DENOMINATOR,
+            "Can't discount on this advert."
+        );
+        require(_discount <= 100, "Discount could not be more than 100%");
+        uint256 newRatio = _adverts[_id].sellerRatio -
+            (DEPOSIT_DENOMINATOR * _discount) /
+            100;
+        decreaseSellerRatio(_id, newRatio);
+    }
+
+    function couldBeForceCloseBySeller(uint256 _id)
+        external
+        view
+        returns (bool)
+    {
+        uint256 buyerLastActive = lastActivity[_adverts[_id].buyer];
+        if (
+            _adverts[_id].status == Status.Active &&
+            block.timestamp > buyerLastActive + ACTIVITY_TIMEOUT
+        ) return true;
+        return false;
+    }
+
+    function couldBeForceCloseByBuyer(uint256 _id)
+        external
+        view
+        returns (bool)
+    {
+        uint256 sellerLastActive = lastActivity[_adverts[_id].seller];
+        if (
+            _adverts[_id].status == Status.Active &&
+            block.timestamp > sellerLastActive + ACTIVITY_TIMEOUT
+        ) return true;
+        return false;
     }
 }
