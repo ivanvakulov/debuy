@@ -1,7 +1,7 @@
 import { Action, Module, VuexModule, getModule } from 'vuex-module-decorators'
 import store from '@/store'
 import {
-    ACTION_GET_ADVERT,
+    ACTION_GET_ADVERT, ACTION_GET_ADVERT_FOR_LISTING, ACTION_GET_ADVERTS_FOR_LISTING_COUNT,
     ACTION_UPLOAD_ADVERT,
     ACTION_UPLOAD_IMAGE,
     ADVERT_STORE
@@ -17,13 +17,42 @@ export interface IAdvertState {
 class AdvertStore extends VuexModule implements IAdvertState {
 
     @Action({ rawError: true })
-    async [ACTION_GET_ADVERT](id: string): Promise<Advert | null> {
+    async [ACTION_GET_ADVERT](id: number | string): Promise<Advert | null> {
         try {
             const options = getContractParameters(`advert`, { _id: id })
 
             const response = await Moralis.executeFunction(options)
 
             return populateAdvertResponse(response)
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve(null)
+        }
+    }
+
+    @Action({ rawError: true })
+    async [ACTION_GET_ADVERT_FOR_LISTING](id: number | string): Promise<Advert | null> {
+        try {
+            const options = getContractParameters(`advertForListingByIndex`, { _id: id })
+
+            const response = await Moralis.executeFunction(options)
+
+            return populateAdvertResponse(response)
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve(null)
+        }
+    }
+
+    @Action({ rawError: true })
+    async [ACTION_GET_ADVERTS_FOR_LISTING_COUNT](): Promise<number | null> {
+        try {
+            const options = getContractParameters(`advertsForListingCount`)
+
+            const response = await Moralis.executeFunction(options)
+            const count = response._hex
+
+            return count ? parseInt(count, 16) : null
         }  catch (e) {
             console.log(e)
             return Promise.resolve(null)
