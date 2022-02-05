@@ -380,10 +380,10 @@ contract Debuy is IDebuy {
             } else {
                 _addAdvertForListing(_id);
             }
-        }
-        _adverts[_id].buyer = _newBuyer;
 
-        emit AdvertUpdated(_adverts[_id].seller, _adverts[_id].buyer, _id);
+            _adverts[_id].buyer = _newBuyer;
+            emit BuyerUpdated(_adverts[_id].seller, _adverts[_id].buyer, _id);
+        }
 
         updateActivity();
     }
@@ -442,6 +442,26 @@ contract Debuy is IDebuy {
         onlySellerOnCreated(_id)
     {
         _adverts[_id].region = _newRegion;
+
+        emit AdvertUpdated(_adverts[_id].seller, _adverts[_id].buyer, _id);
+        updateActivity();
+    }
+
+    function updateAdvert(
+        uint256 _id,
+        uint256 _newPrice,
+        string calldata _newTitle,
+        string calldata _newDescription,
+        string calldata _newRegion,
+        string calldata _newIpfs,
+        address _newBuyer
+    ) external onlySellerOnCreated(_id) {
+        if (_newPrice != _adverts[_id].price) _adverts[_id].price = _newPrice;
+        _adverts[_id].title = _newTitle;
+        _adverts[_id].description = _newDescription;
+        _adverts[_id].ipfs = _newIpfs;
+        _adverts[_id].region = _newRegion;
+        if (_newBuyer != _adverts[_id].buyer) updateBuyer(_id, _newBuyer);
 
         emit AdvertUpdated(_adverts[_id].seller, _adverts[_id].buyer, _id);
         updateActivity();

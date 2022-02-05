@@ -26,48 +26,6 @@ interface IDebuy {
         uint256 buyerRatio;
     }
 
-    // function createAdvert(
-    //     uint256 _price,
-    //     string calldata _title,
-    //     string calldata _description,
-    //     string calldata _region,
-    //     string calldata _ipfs,
-    //     address _buyer
-    // ) external payable returns (uint256 id);
-
-    // function applyToAdvert(uint256 _id) external payable;
-
-    // function withdraw(uint256 _id) external;
-
-    // function forceClose(uint256 _id) external;
-
-    // function confirmClose(uint256 _id) external;
-
-    // function updateBuyer(uint256 _id, address _newBuyer) external;
-
-    // function updatePrice(uint256 _id, uint256 _newPrice) external;
-
-    // function updateTitle(uint256 _id, string calldata _newTitle) external;
-
-    // function updateDescription(uint256 _id, string calldata _newDescription)
-    //     external;
-
-    // function updateIpfs(uint256 _id, string calldata _newIpfs) external;
-
-    // function updateRegion(uint256 _id, string calldata _newRegion) external;
-
-    // function decreaseSellerRatio(uint256 _id, uint256 _newRatio) external;
-
-    // function advertsOfAddressCount(address _address)
-    //     external
-    //     view
-    //     returns (uint256);
-
-    // function advertOfAddressByIndex(address _address, uint256 _index)
-    //     external
-    //     view
-    //     returns (uint256);
-
     event AdvertCreated(
         address indexed seller,
         address indexed buyer,
@@ -116,6 +74,12 @@ interface IDebuy {
     );
 
     event AdvertUpdated(
+        address indexed seller,
+        address indexed buyer,
+        uint256 indexed id
+    );
+
+    event BuyerUpdated(
         address indexed seller,
         address indexed buyer,
         uint256 indexed id

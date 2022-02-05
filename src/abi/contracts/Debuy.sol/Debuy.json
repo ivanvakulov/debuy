@@ -181,6 +181,31 @@
         "internalType": "uint256",
         "name": "id",
         "type": "uint256"
+      }
+    ],
+    "name": "BuyerUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -554,6 +579,49 @@
   {
     "inputs": [],
     "name": "updateActivity",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_newPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_newTitle",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_newDescription",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_newRegion",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_newIpfs",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "_newBuyer",
+        "type": "address"
+      }
+    ],
+    "name": "updateAdvert",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
