@@ -30,7 +30,9 @@
         <v-sheet
             class='text-center'
             height='700px'>
-            <PostAdForm @close='closeSheet'></PostAdForm>
+            <PostAdForm
+                v-if='sheet'
+                @close='closeSheet'></PostAdForm>
         </v-sheet>
     </v-bottom-sheet>
 </v-app>
