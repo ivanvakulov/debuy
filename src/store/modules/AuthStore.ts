@@ -24,11 +24,11 @@ class AuthStore extends VuexModule implements IAuthState {
     @Action({ rawError: true })
     async [ACTION_LOGIN](): Promise<void> {
         try {
-            // const web3Provider = await Moralis.enableWeb3();
-            // console.log(web3Provider, Moralis.isWeb3Enabled())
-            if (!this.user) {
-                // user = await Moralis.authenticate();
-            }
+            const web3Provider = await Moralis.enableWeb3();
+            console.log(web3Provider, Moralis.isWeb3Enabled())
+            // if (!this.user) {
+            // user = await Moralis.authenticate();
+            // }
         }  catch (e) {
             console.log(e)
             return Promise.resolve()
