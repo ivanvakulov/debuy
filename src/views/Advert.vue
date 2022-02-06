@@ -7,12 +7,13 @@
             <v-skeleton-loader
                 v-if='!advert'
                 width='100%'
-                height='300px'
-                type='image'></v-skeleton-loader>
+                height='400px'
+                type='image'>
+            </v-skeleton-loader>
             <v-carousel
                 v-else
                 v-model='slideIndex'
-                height='300'
+                height='400'
                 dark
                 hide-delimiters>
                 <template v-if='!isNoPhoto'>
@@ -61,7 +62,9 @@
                         <v-list-item-title class='text-h5 mb-1'>
                             {{ advertTitle }}
                         </v-list-item-title>
-                        <v-card-text class='pl-0'>{{ advertDescription }}</v-card-text>
+                        <v-card-text class='b-description pl-0'>
+                            {{ advertDescription }}
+                        </v-card-text>
                     </v-list-item-content>
                 </v-list-item>
             </v-card>
@@ -79,6 +82,17 @@
                 v-else
                 :advert='advert'>
             </AdvertSellerBlock>
+
+            <v-skeleton-loader
+                v-if='!advert'
+                class='mb-4'
+                width='100%'
+                height='112'
+                type='card'></v-skeleton-loader>
+            <AdvertBuyerBlock
+                v-else-if='isBuyerSettled'
+                :advert='advert'>
+            </AdvertBuyerBlock>
 
             <v-skeleton-loader
                 v-if='!advert'
@@ -216,6 +230,7 @@ import AdvertPriceBlock from "@/components/advert/AdvertPriceBlock.vue";
 import AdvertSellerBlock from "@/components/advert/AdvertSellerBlock.vue";
 import AdvertForceCloseBlock from "@/components/advert/AdvertForceCloseBlock.vue";
 import AdvertDiscountBlock from "@/components/advert/AdvertDiscountBlock.vue";
+import AdvertBuyerBlock from "@/components/advert/AdvertBuyerBlock.vue";
 import { AdvertModule } from "@/store/modules/AdvertStore";
 import { GlobalModule } from "@/store/modules/GlobalStore";
 import { AuthModule } from "@/store/modules/AuthStore";
@@ -231,7 +246,7 @@ import { DEFAULT_ZERO_ADDRESS, NO_IMAGE_SETTLED_KEY } from "@/helpers/consts";
 import { Chain } from "../../types/Global";
 
 @Component({
-    components: { AdvertSellerActionsBlock, AdvertBuyerActionsBlock, AdvertPriceBlock, AdvertSellerBlock, AdvertForceCloseBlock, AdvertDiscountBlock }
+    components: { AdvertSellerActionsBlock, AdvertBuyerActionsBlock, AdvertPriceBlock, AdvertSellerBlock, AdvertForceCloseBlock, AdvertDiscountBlock, AdvertBuyerBlock }
 })
 export default class AdvertPage extends Vue {
     slideIndex: number = 0
@@ -254,7 +269,11 @@ export default class AdvertPage extends Vue {
     }
 
     get isAdvertAvailable(): boolean {
-        return this.advert?.buyer === AuthModule.account || this.advert?.buyer === DEFAULT_ZERO_ADDRESS
+        return this.advert?.buyer === AuthModule.account || !this.isBuyerSettled
+    }
+
+    get isBuyerSettled(): boolean {
+        return this.advert?.buyer !== DEFAULT_ZERO_ADDRESS
     }
 
     get isCreated(): boolean {
@@ -392,5 +411,7 @@ export default class AdvertPage extends Vue {
 </script>
 
 <style lang="sass">
+.b-description
+    white-space: pre-wrap
 
 </style>

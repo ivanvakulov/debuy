@@ -160,7 +160,7 @@ export default class AdvertSellerActionsBlock extends Vue {
 
         await AdvertModule[ACTION_WITHDRAW_ADVERT](this.advertId)
 
-        this.isLockFundsButtonLoading = false
+        this.isWithdrawButtonLoading = false
     }
 }
 </script>

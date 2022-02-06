@@ -5,7 +5,7 @@
     <v-list-item three-line>
         <v-list-item-content>
             <div class='text-overline mb-4'>
-                Seller {{ isSeller ? `(You)` : `` }}
+                Buyer {{ isBuyer ? `(You)` : `` }}
             </div>
             <v-btn
                 :href='explorerLink'
@@ -16,12 +16,11 @@
                 <v-icon>
                     mdi-open-in-new
                 </v-icon>
-                <span class='ml-2'>{{ sellerAddress }}</span>
+                <span class='ml-2'>{{ buyerAddress }}</span>
             </v-btn>
         </v-list-item-content>
     </v-list-item>
 </v-card>
-
 </template>
 
 <script lang="ts">
@@ -34,12 +33,12 @@ import { getShortAddress } from "@/helpers/contract";
 import { AuthModule } from "@/store/modules/AuthStore";
 
 @Component
-export default class AdvertSellerBlock extends Vue {
+export default class AdvertBuyerBlock extends Vue {
     @Prop({ type: Object, required: true })
     advert!: Advert | null
 
-    get isSeller(): boolean {
-        return this.advert?.seller === AuthModule.account
+    get isBuyer(): boolean {
+        return this.advert?.buyer === AuthModule.account
     }
 
     get activeChain(): Chain | null {
@@ -47,11 +46,11 @@ export default class AdvertSellerBlock extends Vue {
     }
 
     get explorerLink(): string {
-        return this.activeChain?.explorer ? `${this.activeChain?.explorer}${this.advert?.seller || ``}` : ``
+        return this.activeChain?.explorer ? `${this.activeChain?.explorer}${this.advert?.buyer || ``}` : ``
     }
 
-    get sellerAddress(): string {
-        return this.advert?.seller ? getShortAddress(this.advert.seller) : ``
+    get buyerAddress(): string {
+        return this.advert?.buyer ? getShortAddress(this.advert.buyer) : ``
     }
 }
 </script>

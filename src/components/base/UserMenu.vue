@@ -5,7 +5,7 @@
     offset-x>
     <template v-slot:activator='{ on, attrs }'>
         <v-btn
-            class='mx-2'
+            class='b-header-block mx-2'
             color='white'
             elevation='2'
             icon
@@ -13,9 +13,16 @@
             x-large
             v-bind='attrs'
             v-on='on'>
-            <v-icon>
-                mdi-account
-            </v-icon>
+            <v-img
+                v-if='activeChain && activeChain.slug === "mumbai"'
+                width='30px'
+                src='@/assets/mumbai.svg'>
+            </v-img>
+            <v-img
+                v-if='activeChain && activeChain.slug === "rinkeby"'
+                width='30px'
+                src='@/assets/rinkeby.svg'>
+            </v-img>
         </v-btn>
     </template>
 
@@ -29,9 +36,16 @@
                     icon
                     disabled
                     large>
-                    <v-icon>
-                        mdi-account
-                    </v-icon>
+                    <v-img
+                        v-if='activeChain && activeChain.slug === "mumbai"'
+                        width='30px'
+                        src='@/assets/mumbai.svg'>
+                    </v-img>
+                    <v-img
+                        v-if='activeChain && activeChain.slug === "rinkeby"'
+                        width='30px'
+                        src='@/assets/rinkeby.svg'>
+                    </v-img>
                 </v-btn>
 
                 <v-list-item-content>

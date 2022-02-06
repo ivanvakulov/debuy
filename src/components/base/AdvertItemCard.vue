@@ -11,6 +11,24 @@
             indeterminate></v-progress-linear>
     </template>
 
+    <v-btn
+        class='b-network-label'
+        color='white'
+        icon
+        disabled
+        large>
+        <v-img
+            v-if='advertChainSlug === "mumbai"'
+            width='40px'
+            src='@/assets/mumbai.svg'>
+        </v-img>
+        <v-img
+            v-if='advertChainSlug === "rinkeby"'
+            width='40px'
+            src='@/assets/rinkeby.svg'>
+        </v-img>
+    </v-btn>
+
     <v-skeleton-loader
         v-if='isAdvertLoading'
         width='100%'
@@ -66,6 +84,12 @@ export default class AdvertItemCard extends Vue {
     loadAdvertMethod!: string
 
     isAdvertLoading: boolean = false
+
+    get advertChainSlug(): string {
+        const chain = SUPPORTED_CHAINS.find(e => e.id === this.advert?.chain || e.slug === this.advert?.chain)
+
+        return chain?.slug || ``
+    }
 
     get isAdvertNumber(): boolean {
         return !(this.advert as Advert).createdAt
@@ -146,6 +170,14 @@ export default class AdvertItemCard extends Vue {
 
 <style lang="sass">
 .b-advert
+    position: relative
+
+    .b-network-label
+        background-color: white
+        position: absolute
+        z-index: 1
+        top: 5px
+        right: 5px
 
     .v-card__title
         white-space: nowrap

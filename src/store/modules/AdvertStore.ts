@@ -24,7 +24,11 @@ import {
     ACTION_UPDATE_BUYER,
     MUTATION_UPDATE_LISTING_INDICES,
     MUTATION_UPDATE_ADVERT_IN_LIST,
-    MUTATION_UPDATE_LAST_LOADED_LISTING, GETTER_ADVERTS, GETTER_TOTAL_COUNT, GETTER_TOTAL_LAST_INDEX
+    MUTATION_UPDATE_LAST_LOADED_LISTING,
+    GETTER_ADVERTS,
+    GETTER_TOTAL_COUNT,
+    GETTER_TOTAL_LAST_INDEX,
+    GETTER_ACTIVE_CHAIN
 } from "@/store-consts"
 import Moralis from "moralis/dist/moralis.min.js";
 import {
@@ -44,6 +48,7 @@ import { AuthModule } from "@/store/modules/AuthStore";
 import { isNil, range } from "@/helpers/base";
 import { Vue } from "vue-property-decorator";
 import { MUMBAI_CHAIN, RINKEBY_CHAIN } from "@/helpers/consts";
+import { GlobalModule } from "@/store/modules/GlobalStore";
 
 const LOADING_STEP = 3;
 
@@ -314,7 +319,11 @@ class AdvertStore extends VuexModule implements IAdvertState {
 
             await transaction.wait();
 
-            this.context.dispatch(ACTION_GET_ADVERT, params._id)
+            const chain = GlobalModule[GETTER_ACTIVE_CHAIN]
+            this.context.dispatch(ACTION_GET_ADVERT, {
+                id: params._id,
+                chain: chain?.slug
+            })
 
             return null
         }  catch (e) {
@@ -332,7 +341,11 @@ class AdvertStore extends VuexModule implements IAdvertState {
 
             await transaction.wait();
 
-            this.context.dispatch(ACTION_GET_ADVERT, id)
+            const chain = GlobalModule[GETTER_ACTIVE_CHAIN]
+            this.context.dispatch(ACTION_GET_ADVERT, {
+                id,
+                chain: chain?.slug
+            })
 
             return null
         }  catch (e) {
@@ -350,7 +363,11 @@ class AdvertStore extends VuexModule implements IAdvertState {
 
             await transaction.wait();
 
-            this.context.dispatch(ACTION_GET_ADVERT, id)
+            const chain = GlobalModule[GETTER_ACTIVE_CHAIN]
+            this.context.dispatch(ACTION_GET_ADVERT, {
+                id,
+                chain: chain?.slug
+            })
 
             return null
         }  catch (e) {
@@ -368,7 +385,11 @@ class AdvertStore extends VuexModule implements IAdvertState {
 
             await transaction.wait();
 
-            this.context.dispatch(ACTION_GET_ADVERT, id)
+            const chain = GlobalModule[GETTER_ACTIVE_CHAIN]
+            this.context.dispatch(ACTION_GET_ADVERT, {
+                id,
+                chain: chain?.slug
+            })
 
             return null
         }  catch (e) {
@@ -389,7 +410,11 @@ class AdvertStore extends VuexModule implements IAdvertState {
 
             await transaction.wait();
 
-            this.context.dispatch(ACTION_GET_ADVERT, params.id)
+            const chain = GlobalModule[GETTER_ACTIVE_CHAIN]
+            this.context.dispatch(ACTION_GET_ADVERT, {
+                id: params.id,
+                chain: chain?.slug
+            })
 
             return null
         }  catch (e) {
@@ -407,7 +432,11 @@ class AdvertStore extends VuexModule implements IAdvertState {
 
             await transaction.wait();
 
-            this.context.dispatch(ACTION_GET_ADVERT, params.id)
+            const chain = GlobalModule[GETTER_ACTIVE_CHAIN]
+            this.context.dispatch(ACTION_GET_ADVERT, {
+                id: params.id,
+                chain: chain?.slug
+            })
 
             return null
         }  catch (e) {
@@ -425,7 +454,11 @@ class AdvertStore extends VuexModule implements IAdvertState {
 
             await transaction.wait();
 
-            this.context.dispatch(ACTION_GET_ADVERT, params.id)
+            const chain = GlobalModule[GETTER_ACTIVE_CHAIN]
+            this.context.dispatch(ACTION_GET_ADVERT, {
+                id: params.id,
+                chain: chain?.slug
+            })
 
             return null
         }  catch (e) {

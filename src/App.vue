@@ -21,7 +21,7 @@
                 right
                 bottom
                 v-bind='attrs'
-                v-on='on'>
+                @click='openSheet'>
                 <v-icon>
                     mdi-plus
                 </v-icon>
@@ -40,9 +40,10 @@
 
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator';
+import Moralis from "moralis/dist/moralis.min.js";
 import Header from "@/components/base/Header.vue";
 import PostAdForm from "@/components/PostAdForm.vue";
-import { ACTION_SET_MAIN_SUBSCRIBERS } from "@/store-consts";
+import { ACTION_LOGIN,  ACTION_SET_MAIN_SUBSCRIBERS } from "@/store-consts";
 import { Advert } from "../types/Advert";
 import { AdvertModule } from "@/store/modules/AdvertStore";
 import { AuthModule } from "@/store/modules/AuthStore";
@@ -61,6 +62,22 @@ export default class App extends Vue {
     onAdvertEditChange(value: Advert | null) {
         if (value) {
             this.sheet = true
+        }
+    }
+
+    async openSheet() {
+        try {
+            const user = Moralis.User.current();
+            if (!user) {
+                const state = await AuthModule[ACTION_LOGIN]()
+                if (state) {
+                    this.sheet = true
+                }
+            } else {
+                this.sheet = true
+            }
+        } catch (e) {
+            console.log(e)
         }
     }
 

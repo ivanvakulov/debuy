@@ -7,10 +7,14 @@ import {
     ACTION_SET_MAIN_SUBSCRIBERS,
     AUTH_STORE,
     MUTATION_LOGIN,
-    ACTION_ENABLE_WEB3, MUTATION_SET_SUPPORTED_CHAINS, ACTION_UPDATE_ACTIVITY, ACTION_LOAD_ACTIVITY
+    ACTION_ENABLE_WEB3,
+    MUTATION_SET_SUPPORTED_CHAINS,
+    ACTION_UPDATE_ACTIVITY,
+    ACTION_LOAD_ACTIVITY,
+    MUTATION_SET_ACTIVE_CHAIN
 } from "@/store-consts"
 import Moralis from "moralis/dist/moralis.min.js";
-import { SUPPORTED_CHAINS, USER_ACCOUNT_KEY } from "@/helpers/consts";
+import { MUMBAI_CHAIN, SUPPORTED_CHAINS, USER_ACCOUNT_KEY } from "@/helpers/consts";
 import { getContractParameters, getShortAddress } from "@/helpers/contract";
 import { GlobalModule } from "@/store/modules/GlobalStore";
 
@@ -35,14 +39,21 @@ class AuthStore extends VuexModule implements IAuthState {
     }
 
     @Action({ rawError: true })
-    async [ACTION_LOGIN](): Promise<void> {
+    async [ACTION_LOGIN](): Promise<boolean> {
         try {
-            await Moralis.authenticate()
+            await Moralis.authenticate({ chainId: parseInt(MUMBAI_CHAIN.id, 16) })
 
             this.context.commit(MUTATION_LOGIN, Moralis.account)
+
+            await Moralis.switchNetwork(MUMBAI_CHAIN.id);
+
+            GlobalModule[MUTATION_SET_ACTIVE_CHAIN]()
+
+            return true
         }  catch (e) {
             console.log(e)
-            return Promise.resolve()
+            this.context.dispatch(ACTION_LOGOUT)
+            return Promise.resolve(false)
         }
     }
 
@@ -111,8 +122,15 @@ class AuthStore extends VuexModule implements IAuthState {
                 }
             })
 
-            Moralis.onChainChanged((chainId: string | null) => {
+            Moralis.onChainChanged(async(chainId: string | null) => {
                 console.log(`CHANGED CHAIN`, chainId)
+                const chain = SUPPORTED_CHAINS.find(chain => chain.id === chainId)
+
+                if (!chain) {
+                    this.context.dispatch(ACTION_LOGOUT)
+                } else {
+                    GlobalModule[MUTATION_SET_ACTIVE_CHAIN]()
+                }
             })
         }  catch (e) {
             console.log(e)
