@@ -4,7 +4,7 @@
     outlined>
     <div class='pa-4'>
         <v-tooltip
-            v-if='isCreated'
+            v-if='isCreated || isSellerBacked'
             bottom>
             <template v-slot:activator='{ on, attrs }'>
                 <v-btn
@@ -103,6 +103,10 @@ export default class AdvertBuyerActionsBlock extends Vue {
 
     get isMyActivePurchase(): boolean {
         return this.advert?.buyer === AuthModule.account && this.isActive
+    }
+
+    get isSellerBacked(): boolean {
+        return this.advert?.status === AdvertStatus.SellerBacked
     }
 
     get isBuyerBacked(): boolean {

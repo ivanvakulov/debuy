@@ -102,12 +102,17 @@
             </AdvertForceCloseBlock>
 
             <v-alert
-                v-if='isActive'
+                v-if='isActive || (!isAdvertAvailable && isBuyerBacked)'
                 border='top'
                 color='warning lighten-1'
                 class='mb-4'
                 dark>
-                This deal is in progress.
+                {{ isSeller ?
+                    `Waiting for Buyer to confirm` :
+                    isBuyer ? `This deal is in progress. Confirm to finish it.` :
+                    `This deal is in progress.`
+                }}
+
                 <router-link :to='{ name: "HomePage" }' class='white--text'>Find more deals</router-link>
             </v-alert>
 
@@ -191,6 +196,10 @@ export default class AdvertPage extends Vue {
 
     get isFinished(): boolean {
         return this.advert?.status === AdvertStatus.Finished
+    }
+
+    get isBuyerBacked(): boolean {
+        return this.advert?.status === AdvertStatus.BuyerBacked
     }
 
     get isClosed(): boolean {
