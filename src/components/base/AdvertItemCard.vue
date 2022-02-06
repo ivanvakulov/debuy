@@ -47,7 +47,14 @@
     <v-card-title class='d-flex justify-space-between'>
         <div class='b-title-text'>{{ advertTitle }}</div>
 
+        <v-skeleton-loader
+            v-if='isAdvertLoading'
+            width='50px'
+            height='32px'
+            type='text'>
+        </v-skeleton-loader>
         <v-chip
+            v-else
             color='primary'
             label>
             {{ price }} {{ activeChainSymbol }}
