@@ -346,6 +346,11 @@
             "type": "uint256"
           },
           {
+            "internalType": "uint256",
+            "name": "discount",
+            "type": "uint256"
+          },
+          {
             "internalType": "string",
             "name": "title",
             "type": "string"
@@ -419,6 +424,11 @@
           {
             "internalType": "uint256",
             "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "discount",
             "type": "uint256"
           },
           {
@@ -505,6 +515,11 @@
           {
             "internalType": "uint256",
             "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "discount",
             "type": "uint256"
           },
           {
@@ -699,24 +714,6 @@
       }
     ],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_id",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_newRatio",
-        "type": "uint256"
-      }
-    ],
-    "name": "decreaseSellerRatio",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

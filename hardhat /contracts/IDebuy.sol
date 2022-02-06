@@ -16,6 +16,7 @@ interface IDebuy {
         uint256 createdAt;
         Status status;
         uint256 price;
+        uint256 discount;
         string title;
         string description;
         string region;
