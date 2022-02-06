@@ -105,8 +105,9 @@ class AdvertStore extends VuexModule implements IAdvertState {
             const options = getContractParameters(`advertForListingByIndex`, { _index: id })
 
             const response = await Moralis.executeFunction(options)
+            const _id = response.id._hex
 
-            return populateAdvertResponse(response)
+            return populateAdvertResponse(response[0], _id ? parseInt(_id, 16) : null)
         }  catch (e) {
             console.log(e)
             return Promise.resolve(null)
@@ -119,8 +120,9 @@ class AdvertStore extends VuexModule implements IAdvertState {
             const options = getContractParameters(`advertOfAddressByIndex`, { _index: id, _address: AuthModule.account })
 
             const response = await Moralis.executeFunction(options)
+            const _id = response.id._hex
 
-            return populateAdvertResponse(response)
+            return populateAdvertResponse(response, _id ? parseInt(_id, 16) : null)
         }  catch (e) {
             console.log(e)
             return Promise.resolve(null)

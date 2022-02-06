@@ -114,7 +114,7 @@ export default class AdvertItemCard extends Vue {
     }
 
     goToAdvert() {
-        this.$router.push({ name: `AdvertPage`, params: { id: `${this.advertIndex}` } })
+        this.$router.push({ name: `AdvertPage`, params: { id: `${this.advert?.id}` } })
     }
 
     test() {}

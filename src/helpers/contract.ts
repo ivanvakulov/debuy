@@ -3,6 +3,7 @@ import { ExecuteFunctionOptions, ExecuteFunctionParams } from "../../types/Globa
 import ABI from "../abi/contracts/Debuy.sol/Debuy.json";
 import { Advert } from "../../types/Advert";
 import { MORALIS_IPFS_PREFIX } from "@/helpers/consts";
+import { isNil } from "@/helpers/base";
 
 export const getShortAddress = (account: string): string => {
     return `${account.substring(0, 5)}...${account.slice(-4)}`
@@ -19,7 +20,7 @@ export const getContractParameters: (functionName: string, params?: ExecuteFunct
     params
 })
 
-export const populateAdvertResponse: (response: any) => Advert = (response) => ({
+export const populateAdvertResponse: (response: any, id?: number | null) => Advert = (response, id) => ({
     buyer: response.buyer.toLowerCase(),
     buyerRatio: parseInt(response.buyerRatio._hex, 16),
     createdAt: parseInt(response.createdAt._hex, 16),
@@ -30,5 +31,6 @@ export const populateAdvertResponse: (response: any) => Advert = (response) => (
     seller: response.seller.toLowerCase(),
     sellerRatio: parseInt(response.sellerRatio._hex, 16),
     title: response.title,
-    status: response.status
+    status: response.status,
+    id: !isNil(id) ? id! : ``
 })
