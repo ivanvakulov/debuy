@@ -25,7 +25,9 @@ contract Debuy is IDebuy {
     }
 
     function _addAdvertForListing(uint256 _id) private {
+        uint256 length = _advertsForListingCount;
         _advertsForListing[_advertsForListingCount] = _id;
+        _advertsForListingIndex[_id] = length;
         _advertsForListingCount += 1;
     }
 
@@ -137,6 +139,7 @@ contract Debuy is IDebuy {
                 createdAt: block.timestamp,
                 status: status,
                 price: _price,
+                discount: 0,
                 title: _title,
                 description: _description,
                 region: _region,
@@ -338,14 +341,16 @@ contract Debuy is IDebuy {
 
         uint256 value = (_adverts[_id].price * _adverts[_id].sellerRatio) /
             DEPOSIT_DENOMINATOR +
-            _adverts[_id].price;
+            (_adverts[_id].price * (100 - _adverts[_id].discount)) /
+            100;
         (bool sent, ) = _adverts[_id].seller.call{value: value}("");
         require(sent, "Failed to send Ether");
 
         value =
             (_adverts[_id].price * _adverts[_id].buyerRatio) /
             DEPOSIT_DENOMINATOR -
-            _adverts[_id].price;
+            (_adverts[_id].price * (100 - _adverts[_id].discount)) /
+            100;
         (sent, ) = _adverts[_id].buyer.call{value: value}("");
         require(sent, "Failed to send Ether");
 
@@ -486,34 +491,21 @@ contract Debuy is IDebuy {
         updateActivity();
     }
 
-    function decreaseSellerRatio(uint256 _id, uint256 _newRatio) public {
+    function provideDiscount(uint256 _id, uint256 _discount) external {
+        require(_discount <= 100, "Discount could not be more than 100%");
         require(msg.sender == _adverts[_id].seller, "You are not a seller.");
         require(
             _adverts[_id].status == Status.Active,
             "Advert should be active to update ratio."
         );
         require(
-            _newRatio < _adverts[_id].sellerRatio,
-            "Seller ratio could be only decreased."
+            _discount > _adverts[_id].discount,
+            "Discount could be only increased."
         );
-        uint256 diff = _adverts[_id].sellerRatio - _newRatio;
-        _adverts[_id].sellerRatio -= diff;
-        _adverts[_id].buyerRatio += diff;
+        _adverts[_id].discount = _discount;
 
         emit AdvertUpdated(_adverts[_id].seller, _adverts[_id].buyer, _id);
         updateActivity();
-    }
-
-    function provideDiscount(uint256 _id, uint256 _discount) external {
-        require(
-            _adverts[_id].sellerRatio > DEPOSIT_DENOMINATOR,
-            "Can't discount on this advert."
-        );
-        require(_discount <= 100, "Discount could not be more than 100%");
-        uint256 newRatio = _adverts[_id].sellerRatio -
-            (DEPOSIT_DENOMINATOR * _discount) /
-            100;
-        decreaseSellerRatio(_id, newRatio);
     }
 
     function couldBeForceCloseBySeller(uint256 _id)
