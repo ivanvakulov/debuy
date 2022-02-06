@@ -91,6 +91,11 @@
                 :advert='advert'
                 :advert-id='$route.params.id'></AdvertSellerActionsBlock>
 
+            <AdvertDiscountBlock
+                v-if='isSeller && isActive'
+                :advert='advert'
+                :advert-id='$route.params.id'></AdvertDiscountBlock>
+
             <AdvertBuyerActionsBlock
                 v-if='!isSeller && !isClosed &&!isDeleted && isAdvertAvailable'
                 :advert='advert'
@@ -102,18 +107,27 @@
             </AdvertForceCloseBlock>
 
             <v-alert
-                v-if='isActive || (!isAdvertAvailable && isBuyerBacked)'
+                v-if='isActive || (!isAdvertAvailable && isBuyerBacked && !isSeller)'
                 border='top'
                 color='warning lighten-1'
                 class='mb-4'
                 dark>
                 {{ isSeller ?
-                    `Waiting for Buyer to confirm` :
+                    `Waiting for Buyer to confirm the deal.` :
                     isBuyer ? `This deal is in progress. Confirm to finish it.` :
                     `This deal is in progress.`
                 }}
 
                 <router-link :to='{ name: "HomePage" }' class='white--text'>Find more deals</router-link>
+            </v-alert>
+
+            <v-alert
+                v-if='isActive && isBuyer && discountMinValue'
+                border='top'
+                color='green lighten-2'
+                class='mb-4'
+                dark>
+                Seller applied {{ discountMinValue }}% discount for you!
             </v-alert>
 
             <v-alert
@@ -147,6 +161,7 @@ import AdvertBuyerActionsBlock from "@/components/advert/AdvertBuyerActionsBlock
 import AdvertPriceBlock from "@/components/advert/AdvertPriceBlock.vue";
 import AdvertSellerBlock from "@/components/advert/AdvertSellerBlock.vue";
 import AdvertForceCloseBlock from "@/components/advert/AdvertForceCloseBlock.vue";
+import AdvertDiscountBlock from "@/components/advert/AdvertDiscountBlock.vue";
 import { AdvertModule } from "@/store/modules/AdvertStore";
 import {
     ACTION_COULD_BE_FORCE_CLOSED_BY_BUYER,
@@ -161,7 +176,7 @@ import { AuthModule } from "@/store/modules/AuthStore";
 import { DEFAULT_ZERO_ADDRESS } from "@/helpers/consts";
 
 @Component({
-    components: { AdvertSellerActionsBlock, AdvertBuyerActionsBlock, AdvertPriceBlock, AdvertSellerBlock, AdvertForceCloseBlock }
+    components: { AdvertSellerActionsBlock, AdvertBuyerActionsBlock, AdvertPriceBlock, AdvertSellerBlock, AdvertForceCloseBlock, AdvertDiscountBlock }
 })
 export default class AdvertPage extends Vue {
     slideIndex: number = 0
@@ -208,6 +223,10 @@ export default class AdvertPage extends Vue {
 
     get isDeleted(): boolean {
         return this.advert?.status === AdvertStatus.Deleted
+    }
+
+    get discountMinValue(): number {
+        return this.advert?.discount || 0
     }
 
     get ipfsPhotos(): Array<string> {

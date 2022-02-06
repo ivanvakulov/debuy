@@ -32,5 +32,6 @@ export const populateAdvertResponse: (response: any, id?: number | null) => Adve
     sellerRatio: parseInt(response.sellerRatio._hex, 16),
     title: response.title,
     status: response.status,
-    id: !isNil(id) ? id! : ``
+    id: !isNil(id) ? id! : ``,
+    discount: response.discount ? parseInt(response.discount._hex, 16) : 0
 })

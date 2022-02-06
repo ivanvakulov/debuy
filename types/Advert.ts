@@ -22,6 +22,11 @@ export type LockFundsParams = {
     value: string | number
 }
 
+export type ProvideDiscountParams = {
+    id: string | number
+    discount:  number
+}
+
 export type Advert = {
     id?: string | number
     buyer: string
@@ -35,6 +40,7 @@ export type Advert = {
     sellerRatio: number
     title: string
     status: number
+    discount: number
 }
 
 export enum AdvertStatus {

@@ -16,11 +16,21 @@ import {
     MUTATION_ADVERT_TO_EDIT,
     ACTION_COULD_BE_FORCE_CLOSED_BY_SELLER,
     ACTION_COULD_BE_FORCE_CLOSED_BY_BUYER,
-    ACTION_FORCE_CLOSE_ADVERT, ACTION_APPLY_ADVERT, ACTION_WITHDRAW_ADVERT, ACTION_CONFIRM_ADVERT
+    ACTION_FORCE_CLOSE_ADVERT,
+    ACTION_APPLY_ADVERT,
+    ACTION_WITHDRAW_ADVERT,
+    ACTION_CONFIRM_ADVERT,
+    ACTION_PROVIDE_DISCOUNT
 } from "@/store-consts"
 import Moralis from "moralis/dist/moralis.min.js";
 import { getContractParameters,  populateAdvertResponse } from "@/helpers/contract";
-import { Advert, CreateAdvertParams, EditAdvertParams, LockFundsParams } from "../../../types/Advert";
+import {
+    Advert,
+    CreateAdvertParams,
+    EditAdvertParams,
+    LockFundsParams,
+    ProvideDiscountParams
+} from "../../../types/Advert";
 import { AuthModule } from "@/store/modules/AuthStore";
 
 export interface IAdvertState {
@@ -273,6 +283,24 @@ class AdvertStore extends VuexModule implements IAdvertState {
                 ...options,
                 msgValue: params.value
             })
+
+            await transaction.wait();
+
+            this.context.dispatch(ACTION_GET_ADVERT, params.id)
+
+            return null
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve(null)
+        }
+    }
+
+    @Action({ rawError: true })
+    async [ACTION_PROVIDE_DISCOUNT](params: ProvideDiscountParams): Promise<number | null> {
+        try {
+            const options = getContractParameters(`provideDiscount`, { _id: params.id, _discount: params.discount })
+
+            const transaction = await Moralis.executeFunction(options)
 
             await transaction.wait();
 
