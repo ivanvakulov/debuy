@@ -48,9 +48,12 @@ contract Debuy is IDebuy {
     function advertForListingByIndex(uint256 _index)
         external
         view
-        returns (Advert memory)
+        returns (Advert memory, uint256 id)
     {
-        return _adverts[_advertsForListing[_index]];
+        return (
+            _adverts[_advertsForListing[_index]],
+            _advertsForListing[_index]
+        );
     }
 
     function _addAdvertToAddress(address _address, uint256 _id) private {
@@ -99,9 +102,12 @@ contract Debuy is IDebuy {
     function advertOfAddressByIndex(address _address, uint256 _index)
         external
         view
-        returns (Advert memory)
+        returns (Advert memory, uint256 id)
     {
-        return _adverts[_advertsOfAddress[_address][_index]];
+        return (
+            _adverts[_advertsOfAddress[_address][_index]],
+            _advertsOfAddress[_address][_index]
+        );
     }
 
     // if _buyer set to zero address then anyone could apply to this advert
