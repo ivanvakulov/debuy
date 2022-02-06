@@ -305,7 +305,7 @@ export default class AdvertPage extends Vue {
     }
 
     get discountMinValue(): number {
-        return this.advert?.discount || 0
+        return +this.advert?.discount || 0
     }
 
     get isNoPhoto(): boolean {
