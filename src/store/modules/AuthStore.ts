@@ -114,7 +114,6 @@ class AuthStore extends VuexModule implements IAuthState {
             GlobalModule[MUTATION_SET_SUPPORTED_CHAINS](SUPPORTED_CHAINS)
 
             Moralis.onAccountChanged((account: string | null) => {
-                console.log(`ACC CHANGED`, account)
                 if (!account) {
                     this.context.dispatch(ACTION_LOGOUT)
                 } else {
@@ -123,7 +122,6 @@ class AuthStore extends VuexModule implements IAuthState {
             })
 
             Moralis.onChainChanged(async(chainId: string | null) => {
-                console.log(`CHANGED CHAIN`, chainId)
                 const chain = SUPPORTED_CHAINS.find(chain => chain.id === chainId)
 
                 if (!chain) {
