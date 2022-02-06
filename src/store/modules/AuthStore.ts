@@ -7,7 +7,7 @@ import {
     ACTION_SET_MAIN_SUBSCRIBERS,
     AUTH_STORE,
     MUTATION_LOGIN,
-    ACTION_ENABLE_WEB3, MUTATION_SET_SUPPORTED_CHAINS, ACTION_UPDATE_ACTIVITY
+    ACTION_ENABLE_WEB3, MUTATION_SET_SUPPORTED_CHAINS, ACTION_UPDATE_ACTIVITY, ACTION_LOAD_ACTIVITY
 } from "@/store-consts"
 import Moralis from "moralis/dist/moralis.min.js";
 import { SUPPORTED_CHAINS, USER_ACCOUNT_KEY } from "@/helpers/consts";
@@ -75,6 +75,21 @@ class AuthStore extends VuexModule implements IAuthState {
         }  catch (e) {
             console.log(e)
             return Promise.resolve()
+        }
+    }
+
+    @Action({ rawError: true })
+    async [ACTION_LOAD_ACTIVITY](address: string): Promise<number | null> {
+        try {
+            const options = getContractParameters(`lastActivity`, { address })
+
+            const response = await Moralis.executeFunction(options)
+            const lastActiveAt = response._hex
+
+            return lastActiveAt ? parseInt(lastActiveAt, 16) : null
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve(null)
         }
     }
 

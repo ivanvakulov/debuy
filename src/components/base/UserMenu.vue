@@ -64,17 +64,13 @@
                                         size='25'
                                         color='primary'></v-progress-circular>
                                     <template v-else>
-                                        <v-icon v-if='isUpdated'
-                                                color='primary'>
-                                            mdi-check
-                                        </v-icon>
-                                        {{ isUpdated ? `Activity Updated` : `Update activity` }}
+                                        Last Activity: {{ lastActiveText }}
                                     </template>
                                 </v-list-item-title>
                             </v-list-item-content>
                         </v-list-item>
                     </template>
-                    <span>Update activity to increase retention</span>
+                    <span>Click to update activity</span>
                 </v-tooltip>
 
                 <v-list-item @click='goToMyAdverts'>
@@ -89,7 +85,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator';
+import { Vue, Component, Prop, Emit } from 'vue-property-decorator';
 import { AuthModule } from "@/store/modules/AuthStore";
 import { GETTER_SHORT_ADDRESS, GETTER_ACTIVE_CHAIN, ACTION_UPDATE_ACTIVITY } from "@/store-consts";
 import { Chain } from "../../../types/Global";
@@ -97,6 +93,9 @@ import { GlobalModule } from "@/store/modules/GlobalStore";
 
 @Component
 export default class UserMenu extends Vue {
+    @Prop({ type: String, default: `` })
+    lastActiveText!: string
+
     isUpdateActivityLoading: boolean = false
     isUpdated: boolean = false
 
@@ -117,13 +116,11 @@ export default class UserMenu extends Vue {
     }
 
     async updateActivity() {
-        if (this.isUpdated) return;
-
         this.isUpdateActivityLoading = true
 
         await AuthModule[ACTION_UPDATE_ACTIVITY]()
 
-        this.isUpdated = true
+        this.emitUpdatedActivity()
 
         this.isUpdateActivityLoading = false
     }
@@ -131,6 +128,9 @@ export default class UserMenu extends Vue {
     goToMyAdverts() {
         this.$router.push({ name: `MyAdvertsPage` })
     }
+
+    @Emit(`updatedActivity`)
+    emitUpdatedActivity() {}
 }
 </script>
 

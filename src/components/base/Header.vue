@@ -26,7 +26,11 @@
         @click:close='onLogoutClick'>
         {{ accountShort }}
     </v-chip>
-    <UserMenu v-if='account'></UserMenu>
+    <UserMenu
+        v-if='account'
+        :last-active-text='lastActiveText'
+        @updatedActivity='loadActivity'>
+    </UserMenu>
     <v-btn
         v-else
         text
@@ -43,15 +47,18 @@
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator';
 import UserMenu from "@/components/base/UserMenu.vue";
-import { ACTION_LOGIN, ACTION_LOGOUT } from "@/store-consts";
+import { ACTION_LOAD_ACTIVITY, ACTION_LOGIN, ACTION_LOGOUT } from "@/store-consts";
 import { AuthModule } from "@/store/modules/AuthStore";
 import { GETTER_SHORT_ADDRESS } from "@/store-consts/getterNames/modules/auth";
+import Moralis from "moralis/dist/moralis.min.js";
 
 @Component({
     components: { UserMenu }
 })
 export default class Header extends Vue {
     isLoginLoading: boolean = false
+    lastActive: number | null = null
+    unubscribe: any = null
 
     get account(): string | null {
         return AuthModule.account || null
@@ -59,6 +66,10 @@ export default class Header extends Vue {
 
     get accountShort(): string | null {
         return AuthModule[GETTER_SHORT_ADDRESS] || null
+    }
+
+    get lastActiveText(): string {
+        return this.lastActive ? new Date(this.lastActive * 1000).toLocaleDateString() : ``
     }
 
     async onLoginClick(): Promise<void> {
@@ -71,6 +82,26 @@ export default class Header extends Vue {
 
     async onLogoutClick(): Promise<void> {
         await AuthModule[ACTION_LOGOUT]()
+    }
+
+    async loadActivity(): Promise<void> {
+        this.lastActive = await AuthModule[ACTION_LOAD_ACTIVITY](this.account as string)
+    }
+
+    created() {
+        if (Moralis.isWeb3Enabled()) {
+            this.loadActivity()
+        } else {
+            this.unubscribe = Moralis.onWeb3Enabled(async() => {
+                this.loadActivity()
+            })
+        }
+    }
+
+    beforeDestroy() {
+        if (this.unubscribe) {
+            this.unubscribe()
+        }
     }
 }
 </script>
