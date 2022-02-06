@@ -3,7 +3,7 @@ require("@nomiclabs/hardhat-etherscan");
 require("dotenv").config();
 require("hardhat-abi-exporter");
 
-const { PRIVATE_KEY, POLYGONSCAN_API_KEY } = process.env;
+const { PRIVATE_KEY, POLYGONSCAN_API_KEY, ETHERSCAN_API_KEY } = process.env;
 
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
@@ -15,6 +15,10 @@ module.exports = {
     networks: {
         mumbai: {
             url: `https://matic-mumbai.chainstacklabs.com`,
+            accounts: [PRIVATE_KEY],
+        },
+        rinkeby: {
+            url: `https://rinkeby-light.eth.linkpool.io`,
             accounts: [PRIVATE_KEY],
         },
     },
