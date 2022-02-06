@@ -17,15 +17,22 @@ export type EditAdvertParams = {
     _newBuyer: string
 }
 
+export type LockFundsParams = {
+    id: string | number
+    value: string | number
+}
+
 export type Advert = {
     id?: string | number
     buyer: string
+    buyerRatio: number
     createdAt: number
     description: string
     ipfs: string
     price: number
     region: string
     seller: string
+    sellerRatio: number
     title: string
     status: number
 }

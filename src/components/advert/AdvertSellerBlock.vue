@@ -5,7 +5,7 @@
     <v-list-item three-line>
         <v-list-item-content>
             <div class='text-overline mb-4'>
-                Seller
+                Seller {{ isSeller ? `(You)` : `` }}
             </div>
             <v-btn
                 :href='explorerLink'
@@ -42,11 +42,16 @@ import { GlobalModule } from "@/store/modules/GlobalStore";
 import { GETTER_ACTIVE_CHAIN } from "@/store-consts";
 import { Advert } from "../../../types/Advert";
 import { getShortAddress } from "@/helpers/contract";
+import { AuthModule } from "@/store/modules/AuthStore";
 
 @Component
 export default class AdvertSellerBlock extends Vue {
     @Prop({ type: Object, required: true })
     advert!: Advert | null
+
+    get isSeller(): boolean {
+        return this.advert?.seller === AuthModule.account
+    }
 
     get activeChain(): Chain | null {
         return GlobalModule[GETTER_ACTIVE_CHAIN]

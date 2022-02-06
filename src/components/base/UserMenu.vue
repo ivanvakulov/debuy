@@ -64,7 +64,7 @@
                                         size='25'
                                         color='primary'></v-progress-circular>
                                     <template v-else>
-                                        Last Activity: {{ lastActiveText }}
+                                        Last Activity: {{ lastActiveText || `-` }}
                                     </template>
                                 </v-list-item-title>
                             </v-list-item-content>
