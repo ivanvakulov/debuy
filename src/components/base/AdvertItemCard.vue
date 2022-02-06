@@ -43,19 +43,6 @@
 
         <div>{{ advertDescription }}</div>
     </v-card-text>
-
-    <template v-if='false'>
-        <v-divider class='mx-4'></v-divider>
-
-        <v-card-actions>
-            <v-btn
-                color='deep-purple lighten-2'
-                text
-                @click='test'>
-                Reserve
-            </v-btn>
-        </v-card-actions>
-    </template>
 </v-card>
 </template>
 
@@ -64,14 +51,14 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import Moralis from "moralis/dist/moralis.min.js";
 import { AdvertModule } from "@/store/modules/AdvertStore";
 import { ACTION_GET_ADVERT_FOR_LISTING } from "@/store-consts";
-import { Advert } from "../../../types/Advert";
+import { Advert, AdvertIdType } from "../../../types/Advert";
 import { getIpfsUrl, getShortAddress } from "@/helpers/contract";
 import { NO_IMAGE_SETTLED_KEY } from "@/helpers/consts";
 
 @Component
 export default class AdvertItemCard extends Vue {
     @Prop({ type: [Object, Number], required: true })
-    advert!: Advert | number
+    advert!: Advert | AdvertIdType
 
     @Prop({ type: Number, required: true })
     advertIndex!: number
@@ -82,7 +69,7 @@ export default class AdvertItemCard extends Vue {
     isAdvertLoading: boolean = false
 
     get isAdvertNumber(): boolean {
-        return Number.isInteger(this.advert)
+        return !!(this.advert as AdvertIdType).chain
     }
 
     get isNoPhoto(): boolean {
@@ -134,14 +121,14 @@ export default class AdvertItemCard extends Vue {
 
         if (this.isAdvertNumber) {
             // @ts-ignore
-            await AdvertModule[this.loadAdvertMethod]({ id: this.advert, index: this.advertIndex })
+            await AdvertModule[this.loadAdvertMethod]({ id: (this.advert as AdvertIdType).id, index: (this.advert as AdvertIdType).index, chain: (this.advert as AdvertIdType).chain })
         }
 
         this.isAdvertLoading = false
     }
 
     goToAdvert() {
-        this.$router.push({ name: `AdvertPage`, params: { id: `${this.isAdvertNumber ? this.advert : (this.advert as Advert)?.id}` } })
+        this.$router.push({ name: `AdvertPage`, params: { id: `${this.isAdvertNumber ? (this.advert as AdvertIdType).id : (this.advert as Advert)?.id}` } })
     }
 
     async created() {

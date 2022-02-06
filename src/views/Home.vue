@@ -22,13 +22,13 @@ import IntersectionObserverMixin from "@/mixins/IntersectionObserverMixin";
 import Moralis from "moralis/dist/moralis.min.js";
 import { AdvertModule } from "@/store/modules/AdvertStore";
 import {
-    ACTION_GET_ADVERTS_FOR_LISTING_COUNT,
+    ACTION_GET_ADVERTS_FOR_LISTING_COUNT, GETTER_ADVERTS, GETTER_TOTAL_COUNT, GETTER_TOTAL_LAST_INDEX,
     MUTATION_UPDATE_LAST_LOADED_LISTING,
     MUTATION_UPDATE_LISTING_INDICES
 } from "@/store-consts";
 import { mixins } from "vue-class-component";
 import { ObserverMixinOptions } from "../../types/Global";
-import { Advert } from "../../types/Advert";
+import { Advert, AdvertIdType } from "../../types/Advert";
 
 @Component({
     components: { AdvertItemCard }
@@ -36,8 +36,8 @@ import { Advert } from "../../types/Advert";
 export default class Home extends mixins(IntersectionObserverMixin) {
     unubscribe: any = null
 
-    get adverts(): Array<Advert | number> {
-        return AdvertModule.advertsListing
+    get adverts(): Array<Advert | AdvertIdType> {
+        return AdvertModule[GETTER_ADVERTS]
     }
 
     get lastLoadedListing(): `Main` | `My` | null {
@@ -45,7 +45,7 @@ export default class Home extends mixins(IntersectionObserverMixin) {
     }
 
     get shouldLoadMoreAdverts(): boolean {
-        return (AdvertModule.lastListingIndex + 1) < AdvertModule.totalListingCount
+        return (AdvertModule[GETTER_TOTAL_LAST_INDEX] + 1) < AdvertModule[GETTER_TOTAL_COUNT]
     }
 
     async loadAdvertsCount(): Promise<void> {

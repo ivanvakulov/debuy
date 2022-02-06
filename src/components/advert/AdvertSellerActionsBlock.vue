@@ -42,7 +42,7 @@
                     v-on='on'
                     @click='withdrawFunds'>
                     <v-icon>
-                        mdi-currency-usd
+                        mdi-archive-arrow-up-outline
                     </v-icon>
                     <span class='ml-2'>
                         Withdraw

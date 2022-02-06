@@ -35,15 +35,29 @@ export type DropBuyerParams = {
 export type GetAdvertParams = {
     id: string | number
     index: number
+    chain: string
 }
 
 export type HydrateAdvertParams = {
     index: number
     advert: Advert | null
+    chain: string
+}
+
+export type SetCountsParams = {
+    countMumbai: number
+    countRinkeby : number
+}
+
+export type AdvertIdType = {
+    id: string | number
+    index: string | number
+    chain: string
 }
 
 export type Advert = {
     id?: string | number
+    index?: string | number
     buyer: string
     buyerRatio: number
     createdAt: number

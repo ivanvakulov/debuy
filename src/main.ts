@@ -11,6 +11,7 @@ const serverUrl = process.env.VUE_APP_MORALIS_SERVER_URL;
 const appId = process.env.VUE_APP_MORALIS_APPLICATION_ID;
 
 Moralis.start({ serverUrl, appId });
+// Moralis.settings.setAPIRateLimit({ anonymous: 150, authenticated: 150, windowMs:60000 })
 
 new Vue({
     vuetify,

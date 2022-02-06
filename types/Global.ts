@@ -9,9 +9,11 @@ export type Chain = {
 export type ExecuteFunctionParams = Record<string, any>;
 
 export type ExecuteFunctionOptions = {
-    contractAddress: string;
+    contractAddress?: string;
+    address?: string;
     abi: object;
-    functionName: string;
+    functionName?: string;
+    function_name?: string;
     msgValue?: string;
     params?: ExecuteFunctionParams;
 }
