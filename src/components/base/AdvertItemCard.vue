@@ -44,7 +44,15 @@
         height='250'
         src='@/assets/default-image.png'></v-img>
 
-    <v-card-title>{{ advertTitle }}</v-card-title>
+    <v-card-title class='d-flex justify-space-between'>
+        <div class='b-title-text'>{{ advertTitle }}</div>
+
+        <v-chip
+            color='primary'
+            label>
+            {{ price }} {{ activeChainSymbol }}
+        </v-chip>
+    </v-card-title>
 
     <v-card-text>
         <v-row
@@ -71,6 +79,8 @@ import { ACTION_GET_ADVERT_FOR_LISTING } from "@/store-consts";
 import { Advert, AdvertIdType } from "../../../types/Advert";
 import { getIpfsUrl, getShortAddress } from "@/helpers/contract";
 import { MUMBAI_CHAIN, NO_IMAGE_SETTLED_KEY, SUPPORTED_CHAINS } from "@/helpers/consts";
+import Moralis from "moralis/dist/moralis.min.js";
+import { Chain } from "../../../types/Global";
 
 @Component
 export default class AdvertItemCard extends Vue {
@@ -84,6 +94,16 @@ export default class AdvertItemCard extends Vue {
     loadAdvertMethod!: string
 
     isAdvertLoading: boolean = false
+
+    get activeChain(): Chain | null {
+        const chain = SUPPORTED_CHAINS.find(e => e.id === this.advert?.chain || e.slug === this.advert?.chain)
+
+        return chain || null
+    }
+
+    get activeChainSymbol(): string | null {
+        return this.activeChain?.symbol || null
+    }
 
     get advertChainSlug(): string {
         const chain = SUPPORTED_CHAINS.find(e => e.id === this.advert?.chain || e.slug === this.advert?.chain)
@@ -117,7 +137,7 @@ export default class AdvertItemCard extends Vue {
         if (this.isAdvertNumber) return ``
 
         // @ts-ignore
-        return (this.advert as Advert)?.description?.length > 100 ? `${(this.advert as Advert)?.description?.substr(0, 100)}...` : (this.advert as Advert)?.description || ``
+        return (this.advert as Advert)?.description?.length > 90 ? `${(this.advert as Advert)?.description?.substr(0, 90)}...` : (this.advert as Advert)?.description || ``
     }
 
     get createdAt(): string {
@@ -137,6 +157,12 @@ export default class AdvertItemCard extends Vue {
         if (this.isAdvertNumber) return ``
 
         return (this.advert as Advert)?.region || ``
+    }
+
+    get price(): string {
+        if (this.isAdvertNumber) return ``
+
+        return (this.advert as Advert)?.price ? Moralis.Units.FromWei(`${(this.advert as Advert)?.price}`) : ``
     }
 
     async loadAdvert() {
@@ -179,7 +205,8 @@ export default class AdvertItemCard extends Vue {
         top: 5px
         right: 5px
 
-    .v-card__title
+    .b-title-text
+        max-width: 60%
         white-space: nowrap
         overflow: hidden
         text-overflow: ellipsis
