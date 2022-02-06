@@ -32,6 +32,16 @@ export type DropBuyerParams = {
     address: string
 }
 
+export type GetAdvertParams = {
+    id: string | number
+    index: number
+}
+
+export type HydrateAdvertParams = {
+    index: number
+    advert: Advert | null
+}
+
 export type Advert = {
     id?: string | number
     buyer: string

@@ -204,7 +204,7 @@ export default class PostAdForm extends Vue {
             this.title = this.advertToEdit.title;
             this.description = this.advertToEdit.description;
             this.region = this.advertToEdit.region;
-            this.imageHash = this.advertToEdit.ipfs;
+            this.imageHash = this.advertToEdit.ipfs !== NO_IMAGE_SETTLED_KEY ? this.advertToEdit.ipfs : ``;
             this.specifyBuyerAddress = !!this.advertToEdit.buyer && this.advertToEdit.buyer !== DEFAULT_ZERO_ADDRESS;
             this.buyerAddress = this.advertToEdit.buyer !== DEFAULT_ZERO_ADDRESS ? this.advertToEdit.buyer : ``;
             this.price = Moralis.Units.FromWei(`${this.advertToEdit.price}`);

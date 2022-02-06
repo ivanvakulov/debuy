@@ -2,11 +2,14 @@
 <v-container>
     <v-row id='adverts_listing'>
         <v-col
-            v-for='advertIndex in advertsIndices'
-            :key='`advert-${advertIndex}`'
+            v-for='(advert, index) in adverts'
+            :key='`advert-${index}`'
             cols='12'
             md='4'>
-            <AdvertItemCard :advert-index='advertIndex'></AdvertItemCard>
+            <AdvertItemCard
+                :advert='advert'
+                :advert-index='index'>
+            </AdvertItemCard>
         </v-col>
     </v-row>
 </v-container>
@@ -18,53 +21,43 @@ import AdvertItemCard from "@/components/base/AdvertItemCard.vue";
 import IntersectionObserverMixin from "@/mixins/IntersectionObserverMixin";
 import Moralis from "moralis/dist/moralis.min.js";
 import { AdvertModule } from "@/store/modules/AdvertStore";
-import { ACTION_GET_ADVERTS_FOR_LISTING_COUNT } from "@/store-consts";
-import { isNil, range } from "@/helpers/base";
+import {
+    ACTION_GET_ADVERTS_FOR_LISTING_COUNT,
+    MUTATION_UPDATE_LAST_LOADED_LISTING,
+    MUTATION_UPDATE_LISTING_INDICES
+} from "@/store-consts";
 import { mixins } from "vue-class-component";
 import { ObserverMixinOptions } from "../../types/Global";
-
-const LOADING_STEP = 6;
+import { Advert } from "../../types/Advert";
 
 @Component({
     components: { AdvertItemCard }
 })
 export default class Home extends mixins(IntersectionObserverMixin) {
-    totalCount: number = 0
-    page: number = 1
-    lastIndex: number = -1
-    advertsIndices: Array<number> = []
     unubscribe: any = null
 
-    get shouldLoadMoreAdverts(): boolean {
-        return (this.lastIndex + 1) < this.totalCount
+    get adverts(): Array<Advert | number> {
+        return AdvertModule.advertsListing
     }
 
-    updateIndices() {
-        const activeCount = this.page * LOADING_STEP
-        const activeIndices = activeCount <= this.totalCount ? range(this.lastIndex + 1, activeCount) : range(this.lastIndex + 1, this.totalCount)
+    get lastLoadedListing(): `Main` | `My` | null {
+        return AdvertModule.lastLoadedListing
+    }
 
-        this.lastIndex = activeIndices[activeIndices.length - 1];
-        this.advertsIndices = [...this.advertsIndices, ...activeIndices]
+    get shouldLoadMoreAdverts(): boolean {
+        return (AdvertModule.lastListingIndex + 1) < AdvertModule.totalListingCount
     }
 
     async loadAdvertsCount(): Promise<void> {
-        const count = await AdvertModule[ACTION_GET_ADVERTS_FOR_LISTING_COUNT]()
+        AdvertModule[MUTATION_UPDATE_LAST_LOADED_LISTING](`Main`)
 
-        if (!isNil(count)) {
-            this.totalCount = count as number
-
-            this.updateIndices()
-
-            this.page += 1
-        }
+        await AdvertModule[ACTION_GET_ADVERTS_FOR_LISTING_COUNT]()
     }
 
     async handleIntersectionObserver(): Promise<void> {
         if (!this.shouldLoadMoreAdverts) return
 
-        this.updateIndices()
-
-        this.page += 1
+        AdvertModule[MUTATION_UPDATE_LISTING_INDICES]()
 
         await this.$nextTick()
         this.resetObservers()
@@ -87,14 +80,18 @@ export default class Home extends mixins(IntersectionObserverMixin) {
         }
     }
 
-    async created() {
+    async mounted() {
         if (Moralis.isWeb3Enabled()) {
-            await this.loadAdvertsCount()
+            if (!this.adverts.length || !this.lastLoadedListing || this.lastLoadedListing !== `Main`) {
+                await this.loadAdvertsCount()
+            }
 
             this.$intersectionObserverMixin_setIntersectionObserver(this.getObserverOptions())
         } else {
             this.unubscribe = Moralis.onWeb3Enabled(async() => {
-                await this.loadAdvertsCount()
+                if (!this.adverts.length || !this.lastLoadedListing || this.lastLoadedListing !== `Main`) {
+                    await this.loadAdvertsCount()
+                }
 
                 this.$intersectionObserverMixin_setIntersectionObserver(this.getObserverOptions())
             })

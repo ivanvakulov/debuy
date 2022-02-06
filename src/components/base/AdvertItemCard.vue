@@ -70,59 +70,79 @@ import { NO_IMAGE_SETTLED_KEY } from "@/helpers/consts";
 
 @Component
 export default class AdvertItemCard extends Vue {
+    @Prop({ type: [Object, Number], required: true })
+    advert!: Advert | number
+
     @Prop({ type: Number, required: true })
     advertIndex!: number
 
     @Prop({ type: String, default: ACTION_GET_ADVERT_FOR_LISTING })
     loadAdvertMethod!: string
 
-    advert: Advert | null = null
     isAdvertLoading: boolean = false
 
+    get isAdvertNumber(): boolean {
+        return Number.isInteger(this.advert)
+    }
+
     get isNoPhoto(): boolean {
-        return this.advert?.ipfs === NO_IMAGE_SETTLED_KEY
+        if (this.isAdvertNumber) return true
+
+        return (this.advert as Advert)?.ipfs === NO_IMAGE_SETTLED_KEY
     }
 
     get ipfsPhoto(): string {
-        return this.advert?.ipfs ? getIpfsUrl(this.advert?.ipfs) : ``
+        if (this.isAdvertNumber) return ``
+
+        return (this.advert as Advert)?.ipfs ? getIpfsUrl((this.advert as Advert)?.ipfs) : ``
     }
 
     get advertTitle(): string {
-        return this.advert?.title || ``
+        if (this.isAdvertNumber) return ``
+
+        return (this.advert as Advert)?.title || ``
     }
 
     get advertDescription(): string {
+        if (this.isAdvertNumber) return ``
+
         // @ts-ignore
-        return this.advert?.description?.length > 100 ? `${this.advert?.description?.substr(0, 100)}...` : this.advert?.description || ``
+        return (this.advert as Advert)?.description?.length > 100 ? `${(this.advert as Advert)?.description?.substr(0, 100)}...` : (this.advert as Advert)?.description || ``
     }
 
     get createdAt(): string {
-        const date = this.advert?.createdAt ? new Date(this.advert.createdAt * 1000).toLocaleDateString() : ``
+        if (this.isAdvertNumber) return ``
+
+        const date = (this.advert as Advert)?.createdAt ? new Date((this.advert as Advert).createdAt * 1000).toLocaleDateString() : ``
         return date || ``
     }
 
     get sellerAddress(): string {
-        return this.advert?.seller ? getShortAddress(this.advert.seller) : ``
+        if (this.isAdvertNumber) return ``
+
+        return (this.advert as Advert)?.seller ? getShortAddress((this.advert as Advert).seller) : ``
     }
 
     get region(): string {
-        return this.advert?.region || ``
+        if (this.isAdvertNumber) return ``
+
+        return (this.advert as Advert)?.region || ``
     }
 
     async loadAdvert() {
         this.isAdvertLoading = true
 
-        // @ts-ignore
-        this.advert = await AdvertModule[this.loadAdvertMethod](this.advertIndex)
+        if (this.isAdvertNumber) {
+            // @ts-ignore
+            await AdvertModule[this.loadAdvertMethod]({ id: this.advert, index: this.advertIndex })
+        }
 
         this.isAdvertLoading = false
     }
 
     goToAdvert() {
-        this.$router.push({ name: `AdvertPage`, params: { id: `${this.advert?.id}` } })
+        this.$router.push({ name: `AdvertPage`, params: { id: `${this.isAdvertNumber ? this.advert : (this.advert as Advert)?.id}` } })
     }
-
-    test() {}
 
     async created() {
         if (Moralis.isWeb3Enabled()) {
