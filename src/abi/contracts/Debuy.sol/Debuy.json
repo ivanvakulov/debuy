@@ -710,7 +710,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "address",
+        "name": "",
         "type": "address"
       }
     ],
