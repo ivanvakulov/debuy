@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 import "./IDebuy.sol";
 
 contract Debuy is IDebuy {
-    uint256 constant DEPOSIT_MULTIPLIER = 2000;
-    uint256 constant DEPOSIT_DENOMINATOR = 1000;
-    uint256 constant ACTIVITY_TIMEOUT = 100 days;
+    uint256 public constant DEPOSIT_MULTIPLIER = 2000;
+    uint256 public constant DEPOSIT_DENOMINATOR = 1000;
+    uint256 public constant ACTIVITY_TIMEOUT = 100 days;
 
-    mapping(address => uint256) public lastActivity;
+    mapping(address => uint256) private _lastActivity;
 
     Advert[] private _adverts;
 
@@ -19,6 +19,10 @@ contract Debuy is IDebuy {
     mapping(uint256 => uint256) private _advertsForListing;
     mapping(uint256 => uint256) private _advertsForListingIndex;
     uint256 private _advertsForListingCount;
+
+    function lastActivity(address user) external view returns (uint256) {
+        return _lastActivity[user];
+    }
 
     function _addAdvertForListing(uint256 _id) private {
         _advertsForListing[_advertsForListingCount] = _id;
@@ -80,7 +84,7 @@ contract Debuy is IDebuy {
     }
 
     function updateActivity() public {
-        lastActivity[msg.sender] = block.timestamp;
+        _lastActivity[msg.sender] = block.timestamp;
     }
 
     function advert(uint256 _id) external view returns (Advert memory) {
@@ -299,10 +303,10 @@ contract Debuy is IDebuy {
 
         if (msg.sender == _adverts[_id].seller) {
             side = _adverts[_id].seller;
-            lastActive = lastActivity[_adverts[_id].buyer];
+            lastActive = _lastActivity[_adverts[_id].buyer];
         } else if (msg.sender == _adverts[_id].buyer) {
             side = _adverts[_id].buyer;
-            lastActive = lastActivity[_adverts[_id].seller];
+            lastActive = _lastActivity[_adverts[_id].seller];
         } else {
             revert("You are not a part of this advert.");
         }
@@ -517,7 +521,7 @@ contract Debuy is IDebuy {
         view
         returns (bool)
     {
-        uint256 buyerLastActive = lastActivity[_adverts[_id].buyer];
+        uint256 buyerLastActive = _lastActivity[_adverts[_id].buyer];
         if (
             _adverts[_id].status == Status.Active &&
             block.timestamp > buyerLastActive + ACTIVITY_TIMEOUT
@@ -530,7 +534,7 @@ contract Debuy is IDebuy {
         view
         returns (bool)
     {
-        uint256 sellerLastActive = lastActivity[_adverts[_id].seller];
+        uint256 sellerLastActive = _lastActivity[_adverts[_id].seller];
         if (
             _adverts[_id].status == Status.Active &&
             block.timestamp > sellerLastActive + ACTIVITY_TIMEOUT
