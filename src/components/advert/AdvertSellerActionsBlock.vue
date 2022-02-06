@@ -18,10 +18,10 @@
                     v-on='on'
                     @click='lockFunds'>
                     <v-icon>
-                        mdi-gavel
+                        mdi-gold
                     </v-icon>
                     <span class='ml-2'>
-                        Confirm and Lock
+                        Apply and stake
                     </span>
                 </v-btn>
             </template>
