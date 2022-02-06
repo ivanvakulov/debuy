@@ -98,7 +98,7 @@ import { Chain } from "@/../types/Global.ts";
 import { ACTION_EDIT_ADVERT, ACTION_UPLOAD_ADVERT, GETTER_ACTIVE_CHAIN, MUTATION_ADVERT_TO_EDIT } from "@/store-consts";
 import { GlobalModule } from "@/store/modules/GlobalStore";
 import { AdvertModule } from "@/store/modules/AdvertStore";
-import { DEFAULT_ZERO_ADDRESS, ERC20_ADDRESS_LENGTH, NO_IMAGE_SETTLED_KEY } from "@/helpers/consts";
+import { DEFAULT_ZERO_ADDRESS, ERC20_ADDRESS_LENGTH, MUMBAI_CHAIN, NO_IMAGE_SETTLED_KEY } from "@/helpers/consts";
 import Moralis from "moralis/dist/moralis.min.js";
 import { isNil } from "@/helpers/base";
 import { Advert } from "../../types/Advert";
@@ -193,7 +193,7 @@ export default class PostAdForm extends Vue {
 
         if (!isNil(id)) {
             this.emitClose()
-            this.$router.push({ name: `AdvertPage`, params: { id: `${id}` } })
+            this.$router.push({ name: `AdvertPage`, params: { id: `${id}`, chain: this.activeChain?.slug || MUMBAI_CHAIN.slug } })
         }
 
         this.isButtonLoading = false

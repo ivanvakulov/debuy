@@ -19,10 +19,9 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Chain } from "../../../types/Global";
-import { GlobalModule } from "@/store/modules/GlobalStore";
-import { GETTER_ACTIVE_CHAIN } from "@/store-consts";
 import { Advert } from "../../../types/Advert";
 import Moralis from "moralis/dist/moralis.min.js";
+import { SUPPORTED_CHAINS } from "@/helpers/consts";
 
 @Component
 export default class AdvertPriceBlock extends Vue {
@@ -30,7 +29,9 @@ export default class AdvertPriceBlock extends Vue {
     advert!: Advert | null
 
     get activeChain(): Chain | null {
-        return GlobalModule[GETTER_ACTIVE_CHAIN]
+        const chain = SUPPORTED_CHAINS.find(e => e.id === this.advert?.chain || e.slug === this.advert?.chain)
+
+        return chain || null
     }
 
     get activeChainSymbol(): string | null {

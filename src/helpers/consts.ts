@@ -9,12 +9,14 @@ export const MUMBAI_CHAIN = {
     symbol: `MATIC`,
     address: `0x3aC41c017b4813fF73E15d1031E30a2A7048bA76`,
     explorer: `https://mumbai.polygonscan.com/address/`,
+    slug: `mumbai`
 }
 export const RINKEBY_CHAIN = {
     id: `0x4`,
     symbol: `ETH`,
     address: `0x3aC41c017b4813fF73E15d1031E30a2A7048bA76`,
     explorer: `https://rinkeby.etherscan.io/address/`,
+    slug: `rinkeby`
 }
 export const SUPPORTED_CHAINS = [
     MUMBAI_CHAIN,

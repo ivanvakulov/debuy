@@ -48,12 +48,11 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import Moralis from "moralis/dist/moralis.min.js";
 import { AdvertModule } from "@/store/modules/AdvertStore";
 import { ACTION_GET_ADVERT_FOR_LISTING } from "@/store-consts";
 import { Advert, AdvertIdType } from "../../../types/Advert";
 import { getIpfsUrl, getShortAddress } from "@/helpers/contract";
-import { NO_IMAGE_SETTLED_KEY } from "@/helpers/consts";
+import { MUMBAI_CHAIN, NO_IMAGE_SETTLED_KEY, SUPPORTED_CHAINS } from "@/helpers/consts";
 
 @Component
 export default class AdvertItemCard extends Vue {
@@ -69,7 +68,7 @@ export default class AdvertItemCard extends Vue {
     isAdvertLoading: boolean = false
 
     get isAdvertNumber(): boolean {
-        return !!(this.advert as AdvertIdType).chain
+        return !(this.advert as Advert).createdAt
     }
 
     get isNoPhoto(): boolean {
@@ -128,13 +127,19 @@ export default class AdvertItemCard extends Vue {
     }
 
     goToAdvert() {
-        this.$router.push({ name: `AdvertPage`, params: { id: `${this.isAdvertNumber ? (this.advert as AdvertIdType).id : (this.advert as Advert)?.id}` } })
+        const chain = SUPPORTED_CHAINS.find(e => e.id === this.advert?.chain || e.slug === this.advert?.chain)
+
+        this.$router.push({
+            name: `AdvertPage`,
+            params: {
+                id: `${this.isAdvertNumber ? (this.advert as AdvertIdType).id : (this.advert as Advert)?.id}`,
+                chain: chain?.slug || MUMBAI_CHAIN.slug
+            }
+        })
     }
 
     async created() {
-        if (Moralis.isWeb3Enabled()) {
-            await this.loadAdvert()
-        }
+        await this.loadAdvert()
     }
 }
 </script>

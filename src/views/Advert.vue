@@ -217,6 +217,8 @@ import AdvertSellerBlock from "@/components/advert/AdvertSellerBlock.vue";
 import AdvertForceCloseBlock from "@/components/advert/AdvertForceCloseBlock.vue";
 import AdvertDiscountBlock from "@/components/advert/AdvertDiscountBlock.vue";
 import { AdvertModule } from "@/store/modules/AdvertStore";
+import { GlobalModule } from "@/store/modules/GlobalStore";
+import { AuthModule } from "@/store/modules/AuthStore";
 import {
     ACTION_COULD_BE_FORCE_CLOSED_BY_BUYER,
     ACTION_COULD_BE_FORCE_CLOSED_BY_SELLER,
@@ -224,19 +226,15 @@ import {
     MUTATION_ADVERT_ITEM
 } from "@/store-consts";
 import { Advert, AdvertStatus } from "../../types/Advert";
-import Moralis from "moralis/dist/moralis.min.js";
 import { getIpfsUrl, getShortAddress } from "@/helpers/contract";
-import { AuthModule } from "@/store/modules/AuthStore";
 import { DEFAULT_ZERO_ADDRESS, NO_IMAGE_SETTLED_KEY } from "@/helpers/consts";
 import { Chain } from "../../types/Global";
-import { GlobalModule } from "@/store/modules/GlobalStore";
 
 @Component({
     components: { AdvertSellerActionsBlock, AdvertBuyerActionsBlock, AdvertPriceBlock, AdvertSellerBlock, AdvertForceCloseBlock, AdvertDiscountBlock }
 })
 export default class AdvertPage extends Vue {
     slideIndex: number = 0
-    unubscribe: any = null
 
     forceCloseBySeller: boolean = false
     forceCloseByBuyer: boolean = false
@@ -330,7 +328,10 @@ export default class AdvertPage extends Vue {
 
     @Watch(`$route`)
     async routeChangeHandler(): Promise<void> {
-        await AdvertModule[ACTION_GET_ADVERT](this.$route.params.id)
+        await AdvertModule[ACTION_GET_ADVERT]({
+            id: this.$route.params.id,
+            chain: this.$route.params.chain
+        })
 
         if (!this.advert) {
             this.$router.push({ name: `HomePage` })
@@ -346,7 +347,10 @@ export default class AdvertPage extends Vue {
     }
 
     async loadAdvert() {
-        await AdvertModule[ACTION_GET_ADVERT](this.$route.params.id)
+        await AdvertModule[ACTION_GET_ADVERT]({
+            id: this.$route.params.id,
+            chain: this.$route.params.chain
+        })
 
         if (!this.advert) {
             this.$router.push({ name: `HomePage` })
@@ -375,23 +379,13 @@ export default class AdvertPage extends Vue {
 
     created() {
         if (this.$route.params.id) {
-            if (Moralis.isWeb3Enabled()) {
-                this.initAdvertRequests()
-            } else {
-                this.unubscribe = Moralis.onWeb3Enabled(() => {
-                    this.initAdvertRequests()
-                })
-            }
+            this.initAdvertRequests()
         } else {
             this.$router.push({ name: `HomePage` })
         }
     }
 
     beforeDestroy() {
-        if (this.unubscribe) {
-            this.unubscribe()
-        }
-
         AdvertModule[MUTATION_ADVERT_ITEM](null)
     }
 }

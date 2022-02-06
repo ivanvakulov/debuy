@@ -19,7 +19,6 @@
 import {  Component } from 'vue-property-decorator';
 import AdvertItemCard from "@/components/base/AdvertItemCard.vue";
 import IntersectionObserverMixin from "@/mixins/IntersectionObserverMixin";
-import Moralis from "moralis/dist/moralis.min.js";
 import { AdvertModule } from "@/store/modules/AdvertStore";
 import {
     ACTION_GET_ADVERTS_FOR_LISTING_COUNT, GETTER_ADVERTS, GETTER_TOTAL_COUNT, GETTER_TOTAL_LAST_INDEX,
@@ -34,8 +33,6 @@ import { Advert, AdvertIdType } from "../../types/Advert";
     components: { AdvertItemCard }
 })
 export default class Home extends mixins(IntersectionObserverMixin) {
-    unubscribe: any = null
-
     get adverts(): Array<Advert | AdvertIdType> {
         return AdvertModule[GETTER_ADVERTS]
     }
@@ -81,29 +78,15 @@ export default class Home extends mixins(IntersectionObserverMixin) {
     }
 
     async mounted() {
-        if (Moralis.isWeb3Enabled()) {
-            if (!this.adverts.length || !this.lastLoadedListing || this.lastLoadedListing !== `Main`) {
-                await this.loadAdvertsCount()
-            }
-
-            this.$intersectionObserverMixin_setIntersectionObserver(this.getObserverOptions())
-        } else {
-            this.unubscribe = Moralis.onWeb3Enabled(async() => {
-                if (!this.adverts.length || !this.lastLoadedListing || this.lastLoadedListing !== `Main`) {
-                    await this.loadAdvertsCount()
-                }
-
-                this.$intersectionObserverMixin_setIntersectionObserver(this.getObserverOptions())
-            })
+        if (!this.adverts.length || !this.lastLoadedListing || this.lastLoadedListing !== `Main`) {
+            await this.loadAdvertsCount()
         }
+
+        this.$intersectionObserverMixin_setIntersectionObserver(this.getObserverOptions())
     }
 
     beforeDestroy() {
-        if (this.unubscribe) {
-            this.unubscribe()
-
-            this.$intersectionObserverMixin_killObservers()
-        }
+        this.$intersectionObserverMixin_killObservers()
     }
 }
 </script>

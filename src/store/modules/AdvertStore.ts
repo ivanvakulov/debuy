@@ -36,7 +36,7 @@ import {
 import {
     Advert, AdvertIdType,
     CreateAdvertParams, DropBuyerParams,
-    EditAdvertParams, GetAdvertParams, HydrateAdvertParams,
+    EditAdvertParams, GetAdvertItemParams, GetAdvertParams, HydrateAdvertParams,
     LockFundsParams,
     ProvideDiscountParams, SetCountsParams
 } from "../../../types/Advert";
@@ -176,19 +176,20 @@ class AdvertStore extends VuexModule implements IAdvertState {
     }
 
     @Action({ rawError: true })
-    async [ACTION_GET_ADVERT](id: number | string): Promise<Advert | null> {
+    async [ACTION_GET_ADVERT]({ id, chain }: GetAdvertItemParams): Promise<void> {
         try {
-            const options = getContractParameters(`advert`, { _id: id })
+            const nativeOptions = getNativeContractParameters(`advert`, chain,{ _id: `${id}` })
 
-            const response = await Moralis.executeFunction(options)
+            const response = await Moralis.Web3API.native.runContractFunction(nativeOptions)
 
-            const advert = populateAdvertResponse(response)
+            const advert = {
+                ...populateAdvertNativeResponse(response),
+                chain,
+            }
             this.context.commit(MUTATION_ADVERT_ITEM, advert)
-
-            return advert
         }  catch (e) {
             console.log(e)
-            return Promise.resolve(null)
+            return Promise.resolve()
         }
     }
 
@@ -199,7 +200,11 @@ class AdvertStore extends VuexModule implements IAdvertState {
 
             const response = await Moralis.Web3API.native.runContractFunction(nativeOptions)
 
-            const advert = populateAdvertNativeResponse(response[0], !isNil(response.id) ? response.id : null)
+            const advert = {
+                ...populateAdvertNativeResponse(response[0], !isNil(response.id) ? response.id : null),
+                chain,
+            }
+
 
             this.context.commit(MUTATION_UPDATE_ADVERT_IN_LIST, {
                 index,
@@ -219,7 +224,10 @@ class AdvertStore extends VuexModule implements IAdvertState {
 
             const response = await Moralis.Web3API.native.runContractFunction(nativeOptions)
 
-            const advert = populateAdvertNativeResponse(response[0], !isNil(response.id) ? response.id : null)
+            const advert = {
+                ...populateAdvertNativeResponse(response[0], !isNil(response.id) ? response.id : null),
+                chain,
+            }
 
             this.context.commit(MUTATION_UPDATE_ADVERT_IN_LIST, {
                 index,

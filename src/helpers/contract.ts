@@ -46,7 +46,7 @@ export const populateAdvertResponse: (response: any, id?: number | null) => Adve
 
 export const populateAdvertNativeResponse: (response: any, id?: number | null) => Advert = (response, id) => ({
     createdAt: response[0],
-    status: response[1],
+    status: +response[1],
     price: response[2],
     discount: response[3],
     title: response[4],

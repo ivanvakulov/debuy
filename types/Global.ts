@@ -4,6 +4,7 @@ export type Chain = {
     symbol: string
     address: string
     explorer: string
+    slug: string
 }
 
 export type ExecuteFunctionParams = Record<string, any>;
