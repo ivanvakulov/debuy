@@ -69,72 +69,36 @@
                 width='100%'
                 height='112'
                 type='card'></v-skeleton-loader>
-            <v-card
+            <AdvertSellerBlock
                 v-else
-                class='mx-auto mb-4'
-                outlined>
-                <v-list-item three-line>
-                    <v-list-item-content>
-                        <div class='text-overline mb-4'>
-                            Seller
-                        </div>
-                        <v-btn
-                            :href='explorerLink'
-                            :disabled='!explorerLink'
-                            target='_blank'
-                            color='primary'
-                            rounded>
-                            <v-icon>
-                                mdi-open-in-new
-                            </v-icon>
-                            <span class='ml-2'>{{ sellerAddress }}</span>
-                        </v-btn>
-                    </v-list-item-content>
-
-                    <v-list-item-avatar
-                        rounded
-                        size='80'
-                        color='primary'>
-                        <v-icon
-                            color='white'
-                            size='40'>
-                            mdi-account-check
-                        </v-icon>
-                    </v-list-item-avatar>
-                </v-list-item>
-            </v-card>
+                :advert='advert'>
+            </AdvertSellerBlock>
 
             <v-skeleton-loader
                 v-if='!advert'
                 class='mb-4'
                 width='100%'
                 height='64'
-                type='card'></v-skeleton-loader>
-            <v-card
+                type='card'>
+            </v-skeleton-loader>
+            <AdvertPriceBlock
                 v-else
-                class='mx-auto mb-4'
-                outlined>
-                <div class='d-flex justify-space-between pa-4'>
-                    <span class='text-overline'>Price</span>
-                    <v-chip
-                        color='primary'
-                        label>
-                        <v-icon left>
-                            mdi-plus-circle-multiple
-                        </v-icon>
-                        {{ price }} {{ activeChainSymbol }}
-                    </v-chip>
-                </div>
-            </v-card>
+                :advert='advert'>
+            </AdvertPriceBlock>
 
             <AdvertSellerActionsBlock
-                v-if='isOwner && !isFinished && !isClosed && !isDeleted'
+                v-if='isSeller && !isFinished && !isClosed && !isDeleted'
                 :advert='advert'
                 :advert-id='$route.params.id'></AdvertSellerActionsBlock>
 
             <AdvertBuyerActionsBlock
-                v-if='!isOwner && !isClosed &&!isDeleted && isAdvertAvailable'
+                v-if='!isSeller && !isClosed &&!isDeleted && isAdvertAvailable'
                 :advert='advert'></AdvertBuyerActionsBlock>
+
+            <AdvertForceCloseBlock
+                v-if='forceCloseBySeller || forceCloseByBuyer'
+                :advert-id='$route.params.id'>
+            </AdvertForceCloseBlock>
 
             <v-alert
                 v-if='isActive'
@@ -174,29 +138,42 @@
 import { Vue, Component, Watch } from 'vue-property-decorator';
 import AdvertSellerActionsBlock from "@/components/advert/AdvertSellerActionsBlock.vue";
 import AdvertBuyerActionsBlock from "@/components/advert/AdvertBuyerActionsBlock.vue";
+import AdvertPriceBlock from "@/components/advert/AdvertPriceBlock.vue";
+import AdvertSellerBlock from "@/components/advert/AdvertSellerBlock.vue";
+import AdvertForceCloseBlock from "@/components/advert/AdvertForceCloseBlock.vue";
 import { AdvertModule } from "@/store/modules/AdvertStore";
-import { ACTION_GET_ADVERT, GETTER_ACTIVE_CHAIN, MUTATION_ADVERT_ITEM } from "@/store-consts";
+import {
+    ACTION_COULD_BE_FORCE_CLOSED_BY_BUYER,
+    ACTION_COULD_BE_FORCE_CLOSED_BY_SELLER,
+    ACTION_GET_ADVERT,
+    MUTATION_ADVERT_ITEM
+} from "@/store-consts";
 import { Advert, AdvertStatus } from "../../types/Advert";
 import Moralis from "moralis/dist/moralis.min.js";
-import { getIpfsUrl, getShortAddress } from "@/helpers/contract";
-import { GlobalModule } from "@/store/modules/GlobalStore";
-import { Chain } from "../../types/Global";
+import { getIpfsUrl } from "@/helpers/contract";
 import { AuthModule } from "@/store/modules/AuthStore";
 import { DEFAULT_ZERO_ADDRESS } from "@/helpers/consts";
 
 @Component({
-    components: { AdvertSellerActionsBlock, AdvertBuyerActionsBlock }
+    components: { AdvertSellerActionsBlock, AdvertBuyerActionsBlock, AdvertPriceBlock, AdvertSellerBlock, AdvertForceCloseBlock }
 })
 export default class AdvertPage extends Vue {
     slideIndex: number = 0
     unubscribe: any = null
 
+    forceCloseBySeller: boolean = false
+    forceCloseByBuyer: boolean = false
+
     get advert(): Advert | null {
         return AdvertModule.advertItem
     }
 
-    get isOwner(): boolean {
+    get isSeller(): boolean {
         return this.advert?.seller === AuthModule.account
+    }
+
+    get isBuyer(): boolean {
+        return this.advert?.buyer === AuthModule.account && !this.isCreated
     }
 
     get isAdvertAvailable(): boolean {
@@ -240,32 +217,8 @@ export default class AdvertPage extends Vue {
         return date || ``
     }
 
-    get sellerAddress(): string {
-        return this.advert?.seller ? getShortAddress(this.advert.seller) : ``
-    }
-
     get region(): string {
         return this.advert?.region || ``
-    }
-
-    get price(): string {
-        return this.advert?.price ? Moralis.Units.FromWei(`${this.advert?.price}`) : ``
-    }
-
-    get activeChain(): Chain | null {
-        return GlobalModule[GETTER_ACTIVE_CHAIN]
-    }
-
-    get activeChainSymbol(): string | null {
-        return this.activeChain?.symbol || null
-    }
-
-    get explorerLink(): string {
-        return this.activeChain?.explorer ? `${this.activeChain?.explorer}${this.advert?.seller || ``}` : ``
-    }
-
-    get advertToEdit(): Advert | null {
-        return AdvertModule.advertToEdit
     }
 
     @Watch(`$route`)
@@ -285,13 +238,33 @@ export default class AdvertPage extends Vue {
         }
     }
 
-    async created() {
+    async checkForceCloseBySeller() {
+        this.forceCloseBySeller = !!await AdvertModule[ACTION_COULD_BE_FORCE_CLOSED_BY_SELLER](this.$route.params.id)
+    }
+
+    async checkForceCloseByBuyer() {
+        this.forceCloseByBuyer = !!await AdvertModule[ACTION_COULD_BE_FORCE_CLOSED_BY_BUYER](this.$route.params.id)
+    }
+
+    async initAdvertRequests() {
+        await this.loadAdvert()
+
+        if (this.isSeller) {
+            await this.checkForceCloseBySeller()
+        }
+
+        if (this.isBuyer) {
+            await this.checkForceCloseByBuyer()
+        }
+    }
+
+    created() {
         if (this.$route.params.id) {
             if (Moralis.isWeb3Enabled()) {
-                await this.loadAdvert()
+                this.initAdvertRequests()
             } else {
-                this.unubscribe = Moralis.onWeb3Enabled(async() => {
-                    await this.loadAdvert()
+                this.unubscribe = Moralis.onWeb3Enabled(() => {
+                    this.initAdvertRequests()
                 })
             }
         } else {

@@ -13,7 +13,10 @@ import {
     ADVERT_STORE,
     GETTER_ADVERT_TO_EDIT,
     MUTATION_ADVERT_ITEM,
-    MUTATION_ADVERT_TO_EDIT
+    MUTATION_ADVERT_TO_EDIT,
+    ACTION_COULD_BE_FORCE_CLOSED_BY_SELLER,
+    ACTION_COULD_BE_FORCE_CLOSED_BY_BUYER,
+    ACTION_FORCE_CLOSE_ADVERT
 } from "@/store-consts"
 import Moralis from "moralis/dist/moralis.min.js";
 import { getContractParameters,  populateAdvertResponse } from "@/helpers/contract";
@@ -41,6 +44,42 @@ class AdvertStore extends VuexModule implements IAdvertState {
     @Mutation
     [MUTATION_ADVERT_TO_EDIT](advertToEdit: Advert | null): void {
         this.advertToEdit = advertToEdit
+    }
+
+    @Action({ rawError: true })
+    async [ACTION_COULD_BE_FORCE_CLOSED_BY_SELLER](id: number | string): Promise<boolean | null> {
+        try {
+            const options = getContractParameters(`couldBeForceCloseBySeller`, { _id: id })
+
+            return await Moralis.executeFunction(options)
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve(null)
+        }
+    }
+
+    @Action({ rawError: true })
+    async [ACTION_COULD_BE_FORCE_CLOSED_BY_BUYER](id: number | string): Promise<boolean | null> {
+        try {
+            const options = getContractParameters(`couldBeForceCloseByBuyer`, { _id: id })
+
+            return await Moralis.executeFunction(options)
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve(null)
+        }
+    }
+
+    @Action({ rawError: true })
+    async [ACTION_FORCE_CLOSE_ADVERT](id: number | string): Promise<void> {
+        try {
+            const options = getContractParameters(`forceClose`, { _id: id })
+
+            await Moralis.executeFunction(options)
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve()
+        }
     }
 
     @Action({ rawError: true })
