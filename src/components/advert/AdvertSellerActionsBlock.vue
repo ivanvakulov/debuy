@@ -127,8 +127,8 @@ export default class AdvertSellerActionsBlock extends Vue {
 
     onEditClick() {
         AdvertModule[MUTATION_ADVERT_TO_EDIT]({
-            id: this.advertId,
-            ...this.advert
+            ...this.advert,
+            id: this.advertId
         } as Advert)
     }
 
