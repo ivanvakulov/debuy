@@ -122,7 +122,7 @@ class AdvertStore extends VuexModule implements IAdvertState {
             const response = await Moralis.executeFunction(options)
             const _id = response.id._hex
 
-            return populateAdvertResponse(response, _id ? parseInt(_id, 16) : null)
+            return populateAdvertResponse(response[0], _id ? parseInt(_id, 16) : null)
         }  catch (e) {
             console.log(e)
             return Promise.resolve(null)

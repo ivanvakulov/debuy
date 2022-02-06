@@ -81,7 +81,7 @@ class AuthStore extends VuexModule implements IAuthState {
     @Action({ rawError: true })
     async [ACTION_LOAD_ACTIVITY](address: string): Promise<number | null> {
         try {
-            const options = getContractParameters(`lastActivity`, { address })
+            const options = getContractParameters(`lastActivity`, { user: address })
 
             const response = await Moralis.executeFunction(options)
             const lastActiveAt = response._hex
