@@ -56,12 +56,12 @@
                 <v-btn
                     color='success'
                     :disabled='!isMyActivePurchase'
-                    :loading='false'
+                    :loading='isConfirmButtonLoading'
                     large
                     block
                     v-bind='attrs'
                     v-on='on'
-                    @click='lockFunds'>
+                    @click='confirmClose'>
                     <v-icon>
                         mdi-archive-arrow-down-outline
                     </v-icon>
