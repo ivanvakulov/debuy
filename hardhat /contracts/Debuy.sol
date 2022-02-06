@@ -48,9 +48,9 @@ contract Debuy is IDebuy {
     function advertForListingByIndex(uint256 _index)
         external
         view
-        returns (uint256)
+        returns (Advert memory)
     {
-        return _advertsForListing[_index];
+        return _adverts[_advertsForListing[_index]];
     }
 
     function _addAdvertToAddress(address _address, uint256 _id) private {
@@ -99,13 +99,12 @@ contract Debuy is IDebuy {
     function advertOfAddressByIndex(address _address, uint256 _index)
         external
         view
-        returns (uint256)
+        returns (Advert memory)
     {
-        return _advertsOfAddress[_address][_index];
+        return _adverts[_advertsOfAddress[_address][_index]];
     }
 
     // if _buyer set to zero address then anyone could apply to this advert
-    // TODO add check that both addresses could accept ether
     function createAdvert(
         uint256 _price,
         string calldata _title,
@@ -167,10 +166,6 @@ contract Debuy is IDebuy {
     }
 
     function applyToAdvertBySeller(uint256 _id) private {
-        // require(
-        //     msg.sender == adverts[_id].seller,
-        //     "You are not a seller of this advert."
-        // );
         require(
             msg.value ==
                 (_adverts[_id].price * _adverts[_id].sellerRatio) /
@@ -206,13 +201,7 @@ contract Debuy is IDebuy {
         updateActivity();
     }
 
-    // TODO add check that buyer address could accept ether
     function applyToAdvertByBuyer(uint256 _id) private {
-        // require(
-        //     msg.sender == adverts[_id].buyer ||
-        //         adverts[_id].buyer == address(0),
-        //     "You can't applie to this advert."
-        // );
         require(
             msg.value ==
                 (_adverts[_id].price * _adverts[_id].buyerRatio) /
