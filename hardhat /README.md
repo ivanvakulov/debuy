@@ -1,3 +1,3 @@
 # Contract address
 
-Debuy [0xB8fDd1A1860EA0A22A81595f2Feae65C0746a579](https://mumbai.polygonscan.com/address/0xB8fDd1A1860EA0A22A81595f2Feae65C0746a579)
+Debuy [0xDE4CE96cAFABA4d8272DBc8d537Dee2e17c2a4f0](https://mumbai.polygonscan.com/address/0xDE4CE96cAFABA4d8272DBc8d537Dee2e17c2a4f0)
