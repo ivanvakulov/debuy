@@ -7,11 +7,12 @@ import {
     ACTION_SET_MAIN_SUBSCRIBERS,
     AUTH_STORE,
     MUTATION_LOGIN,
-    ACTION_ENABLE_WEB3
+    ACTION_ENABLE_WEB3, MUTATION_SET_SUPPORTED_CHAINS, ACTION_UPDATE_ACTIVITY
 } from "@/store-consts"
 import Moralis from "moralis/dist/moralis.min.js";
-import { USER_ACCOUNT_KEY } from "@/helpers/consts";
-import { getShortAddress } from "@/helpers/contract";
+import { SUPPORTED_CHAINS, USER_ACCOUNT_KEY } from "@/helpers/consts";
+import { getContractParameters, getShortAddress } from "@/helpers/contract";
+import { GlobalModule } from "@/store/modules/GlobalStore";
 
 export interface IAuthState {
     account: string | null
@@ -64,19 +65,27 @@ class AuthStore extends VuexModule implements IAuthState {
     }
 
     @Action({ rawError: true })
+    async [ACTION_UPDATE_ACTIVITY](): Promise<void> {
+        try {
+            const options = getContractParameters(`updateActivity`, {})
+
+            const transaction = await Moralis.executeFunction(options)
+
+            await transaction.wait();
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve()
+        }
+    }
+
+    @Action({ rawError: true })
     async [ACTION_SET_MAIN_SUBSCRIBERS](): Promise<void> {
         try {
             if ((this.context.state as IAuthState).account) {
                 await this.context.dispatch(ACTION_ENABLE_WEB3)
             }
 
-            // Moralis.onWeb3Enabled((result) => {
-            //     console.log(`ENABLED`, result)
-            // })
-            //
-            // Moralis.onWeb3Deactivated((result) => {
-            //     console.log(`DEACTIVATED`, result)
-            // })
+            GlobalModule[MUTATION_SET_SUPPORTED_CHAINS](SUPPORTED_CHAINS)
 
             Moralis.onAccountChanged((account: string | null) => {
                 console.log(`ACC CHANGED`, account)

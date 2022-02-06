@@ -20,14 +20,13 @@ export const getContractParameters: (functionName: string, params?: ExecuteFunct
 })
 
 export const populateAdvertResponse: (response: any) => Advert = (response) => ({
-    buyer: response.buyer,
-    buyerRatio: parseInt(response.buyerRatio._hex, 16),
+    buyer: response.buyer.toLowerCase(),
     createdAt: parseInt(response.createdAt._hex, 16),
     description: response.description,
     ipfs: response.ipfs,
     price: parseInt(response.price._hex, 16),
     region: response.region,
-    seller: response.seller,
-    sellerRatio: parseInt(response.sellerRatio._hex, 16),
+    seller: response.seller.toLowerCase(),
     title: response.title,
+    status: response.status
 })

@@ -7,19 +7,35 @@ export type CreateAdvertParams = {
     _buyer: string
 }
 
-export type EditAdvertParams = CreateAdvertParams & {
+export type EditAdvertParams = {
     _id: string | number
+    _newPrice: string | number
+    _newTitle: string
+    _newDescription: string
+    _newRegion: string
+    _newIpfs: string
+    _newBuyer: string
 }
 
 export type Advert = {
+    id?: string | number
     buyer: string
-    buyerRatio: number
     createdAt: number
     description: string
     ipfs: string
     price: number
     region: string
     seller: string
-    sellerRatio: number
     title: string
+    status: number
+}
+
+export enum AdvertStatus {
+    Created,
+    SellerBacked,
+    BuyerBacked,
+    Active,
+    ForceClosed,
+    Finished,
+    Deleted
 }

@@ -2,7 +2,7 @@
 <div class='b-custom-image-picker'>
     <v-skeleton-loader
         v-if='isImageLoading && !imageUrl'
-        width='100%'
+        maxwidth='100%'
         height='100%'
         type='image'></v-skeleton-loader>
     <template v-else-if='!imageUrl'>
@@ -14,6 +14,7 @@
         class='shrink mt-1 hidden-sm-and-down'
         contain
         max-width='100%'
+        max-height='100%'
         :src='imageUrl'></v-img>
     <input type='file'
            accept='image/*'
@@ -22,13 +23,16 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Emit } from 'vue-property-decorator';
+import { Vue, Component, Emit, Prop } from 'vue-property-decorator';
 import { AdvertModule } from "@/store/modules/AdvertStore";
 import { ACTION_UPLOAD_IMAGE } from "@/store-consts";
 import { getIpfsUrl } from "@/helpers/contract";
 
 @Component
 export default class CustomImagePicker extends Vue {
+    @Prop({ type: String, default: `` })
+    predefinedHash!: string
+
     isImageLoading: boolean = false
     imageUrl: string | null = null
 
@@ -52,6 +56,12 @@ export default class CustomImagePicker extends Vue {
     @Emit(`hash`)
     emitHash(hash: string | null) {
         return hash
+    }
+
+    created() {
+        if (this.predefinedHash) {
+            this.imageUrl = getIpfsUrl(this.predefinedHash)
+        }
     }
 }
 </script>

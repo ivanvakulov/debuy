@@ -6,29 +6,33 @@
             :key='`advert-${advertIndex}`'
             cols='12'
             md='4'>
-            <AdvertItemCard :advert-index='advertIndex'></AdvertItemCard>
+            <AdvertItemCard
+                :advert-index='advertIndex'
+                :load-advert-method='$options.ACTION_GET_ADVERT_BY_ADDRESS'></AdvertItemCard>
         </v-col>
     </v-row>
 </v-container>
 </template>
 
 <script lang="ts">
-import {  Component } from 'vue-property-decorator';
+import { Component } from 'vue-property-decorator';
 import AdvertItemCard from "@/components/base/AdvertItemCard.vue";
 import IntersectionObserverMixin from "@/mixins/IntersectionObserverMixin";
 import Moralis from "moralis/dist/moralis.min.js";
 import { AdvertModule } from "@/store/modules/AdvertStore";
-import { ACTION_GET_ADVERTS_FOR_LISTING_COUNT } from "@/store-consts";
+import { ACTION_GET_ADVERT_BY_ADDRESS, ACTION_GET_ADVERTS_COUNT_BY_ADDRESS } from "@/store-consts";
 import { isNil, range } from "@/helpers/base";
-import { mixins } from "vue-class-component";
 import { ObserverMixinOptions } from "../../types/Global";
+import { mixins } from "vue-class-component";
 
 const LOADING_STEP = 6;
 
 @Component({
+// @ts-ignore
+    ACTION_GET_ADVERT_BY_ADDRESS,
     components: { AdvertItemCard }
 })
-export default class Home extends mixins(IntersectionObserverMixin) {
+export default class MyAdverts extends mixins(IntersectionObserverMixin) {
     totalCount: number = 0
     page: number = 1
     lastIndex: number = -1
@@ -48,7 +52,7 @@ export default class Home extends mixins(IntersectionObserverMixin) {
     }
 
     async loadAdvertsCount(): Promise<void> {
-        const count = await AdvertModule[ACTION_GET_ADVERTS_FOR_LISTING_COUNT]()
+        const count = await AdvertModule[ACTION_GET_ADVERTS_COUNT_BY_ADDRESS]()
 
         if (!isNil(count)) {
             this.totalCount = count as number
@@ -91,12 +95,12 @@ export default class Home extends mixins(IntersectionObserverMixin) {
         if (Moralis.isWeb3Enabled()) {
             await this.loadAdvertsCount()
 
-            this.$intersectionObserverMixin_setIntersectionObserver(this.getObserverOptions())
+            // this.$intersectionObserverMixin_setIntersectionObserver(this.getObserverOptions())
         } else {
             this.unubscribe = Moralis.onWeb3Enabled(async() => {
                 await this.loadAdvertsCount()
 
-                this.$intersectionObserverMixin_setIntersectionObserver(this.getObserverOptions())
+                // this.$intersectionObserverMixin_setIntersectionObserver(this.getObserverOptions())
             })
         }
     }
@@ -105,7 +109,7 @@ export default class Home extends mixins(IntersectionObserverMixin) {
         if (this.unubscribe) {
             this.unubscribe()
 
-            this.$intersectionObserverMixin_killObservers()
+            // this.$intersectionObserverMixin_killObservers()
         }
     }
 }

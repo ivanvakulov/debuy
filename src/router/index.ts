@@ -14,6 +14,11 @@ const routes: Array<RouteConfig> = [
         path: `/advert/:id`,
         name: `AdvertPage`,
         component: () => import(/* webpackChunkName: "advert" */ `../views/Advert.vue`)
+    },
+    {
+        path: `/my-adverts`,
+        name: `MyAdvertsPage`,
+        component: () => import(/* webpackChunkName: "my-adverts" */ `../views/MyAdverts.vue`)
     }
 ]
 

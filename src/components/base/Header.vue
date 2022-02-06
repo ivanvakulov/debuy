@@ -26,18 +26,7 @@
         @click:close='onLogoutClick'>
         {{ accountShort }}
     </v-chip>
-    <v-btn
-        v-if='account'
-        class='mx-2'
-        color='white'
-        elevation='2'
-        icon
-        outlined
-        x-large>
-        <v-icon>
-            mdi-account
-        </v-icon>
-    </v-btn>
+    <UserMenu v-if='account'></UserMenu>
     <v-btn
         v-else
         text
@@ -53,11 +42,14 @@
 
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator';
+import UserMenu from "@/components/base/UserMenu.vue";
 import { ACTION_LOGIN, ACTION_LOGOUT } from "@/store-consts";
 import { AuthModule } from "@/store/modules/AuthStore";
 import { GETTER_SHORT_ADDRESS } from "@/store-consts/getterNames/modules/auth";
 
-@Component
+@Component({
+    components: { UserMenu }
+})
 export default class Header extends Vue {
     isLoginLoading: boolean = false
 

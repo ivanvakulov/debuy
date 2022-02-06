@@ -63,7 +63,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import Moralis from "moralis/dist/moralis.min.js";
 import { AdvertModule } from "@/store/modules/AdvertStore";
-import { ACTION_GET_ADVERT } from "@/store-consts";
+import { ACTION_GET_ADVERT_FOR_LISTING } from "@/store-consts";
 import { Advert } from "../../../types/Advert";
 import { getIpfsUrl, getShortAddress } from "@/helpers/contract";
 
@@ -71,6 +71,9 @@ import { getIpfsUrl, getShortAddress } from "@/helpers/contract";
 export default class AdvertItemCard extends Vue {
     @Prop({ type: Number, required: true })
     advertIndex!: number
+
+    @Prop({ type: String, default: ACTION_GET_ADVERT_FOR_LISTING })
+    loadAdvertMethod!: string
 
     advert: Advert | null = null
     isAdvertLoading: boolean = false
@@ -104,7 +107,8 @@ export default class AdvertItemCard extends Vue {
     async loadAdvert() {
         this.isAdvertLoading = true
 
-        this.advert = await AdvertModule[ACTION_GET_ADVERT](this.advertIndex)
+        // @ts-ignore
+        this.advert = await AdvertModule[this.loadAdvertMethod](this.advertIndex)
 
         this.isAdvertLoading = false
     }

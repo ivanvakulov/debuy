@@ -18,4 +18,9 @@ function getUniqueNumberId(id: number, increment: number = 3): number {
     return Number(`${id}${Math.round(Math.random() * (10 ** increment))}`)
 }
 
-export { isNil, omit, getUniqueNumberId }
+const range = (start: number, end: number) => {
+    // @ts-ignore
+    return Array(end - start).fill().map((_, idx) => start + idx)
+}
+
+export { isNil, omit, getUniqueNumberId, range }

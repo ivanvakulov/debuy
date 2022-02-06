@@ -39,17 +39,30 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator';
+import { Vue, Component, Watch } from 'vue-property-decorator';
 import Header from "@/components/base/Header.vue";
 import PostAdForm from "@/components/PostAdForm.vue";
-import { AuthModule } from "@/store/modules/AuthStore";
 import { ACTION_SET_MAIN_SUBSCRIBERS } from "@/store-consts";
+import { Advert } from "../types/Advert";
+import { AdvertModule } from "@/store/modules/AdvertStore";
+import { AuthModule } from "@/store/modules/AuthStore";
 
 @Component({
     components: { Header, PostAdForm }
 })
 export default class App extends Vue {
     sheet: boolean = false
+
+    get advertToEdit(): Advert | null {
+        return AdvertModule.advertToEdit
+    }
+
+    @Watch(`advertToEdit`)
+    onAdvertEditChange(value: Advert | null) {
+        if (value) {
+            this.sheet = true
+        }
+    }
 
     closeSheet() {
         this.sheet = false

@@ -15,7 +15,9 @@
         <v-col
             cols='12'
             md='6'>
-            <CustomImagePicker @hash='setImageHash'></CustomImagePicker>
+            <CustomImagePicker
+                :predefinedHash='imageHash'
+                @hash='setImageHash'></CustomImagePicker>
         </v-col>
         <v-col
             cols='12'
@@ -81,8 +83,8 @@
                 :loading='isButtonLoading'
                 large
                 block
-                @click='createAdvert'>
-                Create
+                @click='onSubmitClick'>
+                {{ advertToEdit ? `Edit` : `Create` }}
             </v-btn>
         </v-col>
     </v-row>
@@ -93,12 +95,13 @@
 import { Vue, Component, Emit } from 'vue-property-decorator';
 import CustomImagePicker from "@/components/base/CustomImagePicker.vue";
 import { Chain } from "@/../types/Global.ts";
-import { ACTION_UPLOAD_ADVERT, GETTER_ACTIVE_CHAIN } from "@/store-consts";
+import { ACTION_EDIT_ADVERT, ACTION_UPLOAD_ADVERT, GETTER_ACTIVE_CHAIN, MUTATION_ADVERT_TO_EDIT } from "@/store-consts";
 import { GlobalModule } from "@/store/modules/GlobalStore";
 import { AdvertModule } from "@/store/modules/AdvertStore";
 import { DEFAULT_ZERO_ADDRESS, ERC20_ADDRESS_LENGTH, NO_IMAGE_SETTLED_KEY } from "@/helpers/consts";
 import Moralis from "moralis/dist/moralis.min.js";
 import { isNil } from "@/helpers/base";
+import { Advert } from "../../types/Advert";
 
 @Component({
     components: { CustomImagePicker }
@@ -142,8 +145,38 @@ export default class PostAdForm extends Vue {
         return !this.title || !this.description || !this.price || !this.region || (this.specifyBuyerAddress && !this.buyerAddress)
     }
 
+    get advertToEdit(): Advert | null {
+        return AdvertModule.advertToEdit
+    }
+
     setImageHash(hash: string | null): void {
         this.imageHash = hash
+    }
+
+    onSubmitClick(): void {
+        if (this.advertToEdit) {
+            this.editAdvert()
+        } else {
+            this.createAdvert()
+        }
+    }
+
+    async editAdvert(): Promise<void> {
+        this.isButtonLoading = true
+
+        await AdvertModule[ACTION_EDIT_ADVERT]({
+            _id: this.advertToEdit!.id!,
+            _newTitle: this.title || ``,
+            _newDescription: this.description || ``,
+            _newIpfs: this.imageHash || NO_IMAGE_SETTLED_KEY,
+            _newPrice: Moralis.Units.Token(this.price) || 0,
+            _newRegion: this.region || ``,
+            _newBuyer: this.buyerAddress || DEFAULT_ZERO_ADDRESS
+        })
+
+        this.emitClose()
+
+        this.isButtonLoading = false
     }
 
     async createAdvert(): Promise<void> {
@@ -153,9 +186,9 @@ export default class PostAdForm extends Vue {
             _title: this.title || ``,
             _description: this.description || ``,
             _ipfs: this.imageHash || NO_IMAGE_SETTLED_KEY,
-            _price: Moralis.Units.ETH(this.price) || 0,
+            _price: Moralis.Units.Token(this.price) || 0,
             _region: this.region || ``,
-            _buyer: DEFAULT_ZERO_ADDRESS
+            _buyer: this.buyerAddress || DEFAULT_ZERO_ADDRESS
         })
 
         if (!isNil(id)) {
@@ -166,8 +199,24 @@ export default class PostAdForm extends Vue {
         this.isButtonLoading = false
     }
 
+    created() {
+        if (this.advertToEdit) {
+            this.title = this.advertToEdit.title;
+            this.description = this.advertToEdit.description;
+            this.region = this.advertToEdit.region;
+            this.imageHash = this.advertToEdit.ipfs;
+            this.specifyBuyerAddress = !!this.advertToEdit.buyer && this.advertToEdit.buyer !== DEFAULT_ZERO_ADDRESS;
+            this.buyerAddress = this.advertToEdit.buyer !== DEFAULT_ZERO_ADDRESS ? this.advertToEdit.buyer : ``;
+            this.price = Moralis.Units.FromWei(`${this.advertToEdit.price}`);
+        }
+    }
+
     @Emit(`close`)
     emitClose() { }
+
+    beforeDestroy() {
+        AdvertModule[MUTATION_ADVERT_TO_EDIT](null)
+    }
 }
 </script>
 

@@ -1,25 +1,69 @@
-import { Action, Module, VuexModule, getModule } from 'vuex-module-decorators'
+import { Action, Module, VuexModule, getModule, Mutation } from 'vuex-module-decorators'
 import store from '@/store'
 import {
-    ACTION_GET_ADVERT, ACTION_GET_ADVERT_FOR_LISTING, ACTION_GET_ADVERTS_FOR_LISTING_COUNT,
+    ACTION_DELETE_ADVERT,
+    ACTION_EDIT_ADVERT,
+    ACTION_GET_ADVERT,
+    ACTION_GET_ADVERT_FOR_LISTING,
+    ACTION_GET_ADVERTS_FOR_LISTING_COUNT,
+    ACTION_GET_ADVERT_BY_ADDRESS,
+    ACTION_GET_ADVERTS_COUNT_BY_ADDRESS,
     ACTION_UPLOAD_ADVERT,
     ACTION_UPLOAD_IMAGE,
-    ADVERT_STORE
+    ADVERT_STORE,
+    GETTER_ADVERT_TO_EDIT,
+    MUTATION_ADVERT_ITEM,
+    MUTATION_ADVERT_TO_EDIT
 } from "@/store-consts"
 import Moralis from "moralis/dist/moralis.min.js";
-import { getContractParameters, populateAdvertResponse } from "@/helpers/contract";
-import { Advert, CreateAdvertParams } from "../../../types/Advert";
+import { getContractParameters,  populateAdvertResponse } from "@/helpers/contract";
+import { Advert, CreateAdvertParams, EditAdvertParams } from "../../../types/Advert";
+import { AuthModule } from "@/store/modules/AuthStore";
 
 export interface IAdvertState {
+    advertToEdit: Advert | null
 }
 
 @Module({ name: ADVERT_STORE, store, dynamic: true, namespaced: true, stateFactory: true })
 class AdvertStore extends VuexModule implements IAdvertState {
+    advertItem: Advert | null = null
+    advertToEdit: Advert | null = null
+
+    get [GETTER_ADVERT_TO_EDIT](): Advert | null {
+        return this.advertToEdit
+    }
+
+    @Mutation
+    [MUTATION_ADVERT_ITEM](advert: Advert | null): void {
+        this.advertItem = advert
+    }
+
+    @Mutation
+    [MUTATION_ADVERT_TO_EDIT](advertToEdit: Advert | null): void {
+        this.advertToEdit = advertToEdit
+    }
 
     @Action({ rawError: true })
     async [ACTION_GET_ADVERT](id: number | string): Promise<Advert | null> {
         try {
             const options = getContractParameters(`advert`, { _id: id })
+
+            const response = await Moralis.executeFunction(options)
+
+            const advert = populateAdvertResponse(response)
+            this.context.commit(MUTATION_ADVERT_ITEM, advert)
+
+            return advert
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve(null)
+        }
+    }
+
+    @Action({ rawError: true })
+    async [ACTION_GET_ADVERT_FOR_LISTING](id: number | string): Promise<Advert | null> {
+        try {
+            const options = getContractParameters(`advertForListingByIndex`, { _index: id })
 
             const response = await Moralis.executeFunction(options)
 
@@ -31,9 +75,9 @@ class AdvertStore extends VuexModule implements IAdvertState {
     }
 
     @Action({ rawError: true })
-    async [ACTION_GET_ADVERT_FOR_LISTING](id: number | string): Promise<Advert | null> {
+    async [ACTION_GET_ADVERT_BY_ADDRESS](id: number | string): Promise<Advert | null> {
         try {
-            const options = getContractParameters(`advertForListingByIndex`, { _id: id })
+            const options = getContractParameters(`advertOfAddressByIndex`, { _index: id, _address: AuthModule.account })
 
             const response = await Moralis.executeFunction(options)
 
@@ -48,6 +92,21 @@ class AdvertStore extends VuexModule implements IAdvertState {
     async [ACTION_GET_ADVERTS_FOR_LISTING_COUNT](): Promise<number | null> {
         try {
             const options = getContractParameters(`advertsForListingCount`)
+
+            const response = await Moralis.executeFunction(options)
+            const count = response._hex
+
+            return count ? parseInt(count, 16) : null
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve(null)
+        }
+    }
+
+    @Action({ rawError: true })
+    async [ACTION_GET_ADVERTS_COUNT_BY_ADDRESS](): Promise<number | null> {
+        try {
+            const options = getContractParameters(`advertsOfAddressCount`, { _address: AuthModule.account })
 
             const response = await Moralis.executeFunction(options)
             const count = response._hex
@@ -77,7 +136,6 @@ class AdvertStore extends VuexModule implements IAdvertState {
         try {
             const options = getContractParameters(`createAdvert`, params)
 
-            console.log(options)
             const transaction = await Moralis.executeFunction(options)
 
             const response = await transaction.wait();
@@ -87,6 +145,42 @@ class AdvertStore extends VuexModule implements IAdvertState {
             const id = event?.topics[event.topics?.length - 1]
 
             return id ? parseInt(id, 16) : null
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve(null)
+        }
+    }
+
+    @Action({ rawError: true })
+    async [ACTION_EDIT_ADVERT](params: EditAdvertParams): Promise<number | null> {
+        try {
+            const options = getContractParameters(`updateAdvert`, params)
+
+            const transaction = await Moralis.executeFunction(options)
+
+            await transaction.wait();
+
+            this.context.dispatch(ACTION_GET_ADVERT, params._id)
+
+            return null
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve(null)
+        }
+    }
+
+    @Action({ rawError: true })
+    async [ACTION_DELETE_ADVERT](id: number | string): Promise<number | null> {
+        try {
+            const options = getContractParameters(`deleteAdvert`, { _id: id })
+
+            const transaction = await Moralis.executeFunction(options)
+
+            await transaction.wait();
+
+            this.context.dispatch(ACTION_GET_ADVERT, id)
+
+            return null
         }  catch (e) {
             console.log(e)
             return Promise.resolve(null)
