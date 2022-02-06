@@ -4,13 +4,13 @@
     outlined>
     <div class='pa-4'>
         <v-tooltip
-            v-if='isCreated'
+            v-if='isCreated || isBuyerBacked'
             bottom>
             <template v-slot:activator='{ on, attrs }'>
                 <v-btn
                     class='mb-4'
                     color='primary'
-                    :disabled='!isCreated || isDeleteButtonLoading'
+                    :disabled='isDeleteButtonLoading'
                     :loading='isLockFundsButtonLoading'
                     large
                     block
