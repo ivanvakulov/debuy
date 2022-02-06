@@ -93,7 +93,8 @@
 
             <AdvertBuyerActionsBlock
                 v-if='!isSeller && !isClosed &&!isDeleted && isAdvertAvailable'
-                :advert='advert'></AdvertBuyerActionsBlock>
+                :advert='advert'
+                :advert-id='$route.params.id'></AdvertBuyerActionsBlock>
 
             <AdvertForceCloseBlock
                 v-if='forceCloseBySeller || forceCloseByBuyer'
