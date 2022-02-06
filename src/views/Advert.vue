@@ -15,11 +15,17 @@
                 height='300'
                 dark
                 hide-delimiters>
+                <template v-if='!isNoPhoto'>
+                    <v-carousel-item
+                        v-for='img in ipfsPhotos'
+                        :src='img'
+                        lazy-src='@/assets/blur-image.png'
+                        :key='img'>
+                    </v-carousel-item>
+                </template>
                 <v-carousel-item
-                    v-for='img in ipfsPhotos'
-                    :src='img'
-                    lazy-src='@/assets/blur-image.png'
-                    :key='img'>
+                    v-else
+                    src='@/assets/default-image.png'>
                 </v-carousel-item>
             </v-carousel>
 
@@ -122,6 +128,22 @@
             </v-alert>
 
             <v-alert
+                v-if='(isCreated || isSellerBacked) && isBuyer'
+                border='top'
+                color='green lighten-2'
+                class='mb-4'
+                dark>
+                This deal created specially for you!
+                <br>
+                (<a
+                    :href='explorerBuyerLink'
+                    target='_blank'
+                    class='text-decoration-underline white--text'>
+                    {{ buyerAddress }}
+                </a>)
+            </v-alert>
+
+            <v-alert
                 v-if='isActive && isBuyer && discountMinValue'
                 border='top'
                 color='green lighten-2'
@@ -205,7 +227,7 @@ import { Advert, AdvertStatus } from "../../types/Advert";
 import Moralis from "moralis/dist/moralis.min.js";
 import { getIpfsUrl, getShortAddress } from "@/helpers/contract";
 import { AuthModule } from "@/store/modules/AuthStore";
-import { DEFAULT_ZERO_ADDRESS } from "@/helpers/consts";
+import { DEFAULT_ZERO_ADDRESS, NO_IMAGE_SETTLED_KEY } from "@/helpers/consts";
 import { Chain } from "../../types/Global";
 import { GlobalModule } from "@/store/modules/GlobalStore";
 
@@ -230,7 +252,7 @@ export default class AdvertPage extends Vue {
     }
 
     get isBuyer(): boolean {
-        return this.advert?.buyer === AuthModule.account && !this.isCreated
+        return this.advert?.buyer === AuthModule.account
     }
 
     get isAdvertAvailable(): boolean {
@@ -241,16 +263,20 @@ export default class AdvertPage extends Vue {
         return this.advert?.status === AdvertStatus.Created
     }
 
+    get isSellerBacked(): boolean {
+        return this.advert?.status === AdvertStatus.SellerBacked
+    }
+
+    get isBuyerBacked(): boolean {
+        return this.advert?.status === AdvertStatus.BuyerBacked
+    }
+
     get isActive(): boolean {
         return this.advert?.status === AdvertStatus.Active
     }
 
     get isFinished(): boolean {
         return this.advert?.status === AdvertStatus.Finished
-    }
-
-    get isBuyerBacked(): boolean {
-        return this.advert?.status === AdvertStatus.BuyerBacked
     }
 
     get isClosed(): boolean {
@@ -263,6 +289,10 @@ export default class AdvertPage extends Vue {
 
     get discountMinValue(): number {
         return this.advert?.discount || 0
+    }
+
+    get isNoPhoto(): boolean {
+        return this.advert?.ipfs === NO_IMAGE_SETTLED_KEY
     }
 
     get ipfsPhotos(): Array<string> {
@@ -334,11 +364,11 @@ export default class AdvertPage extends Vue {
     async initAdvertRequests() {
         await this.loadAdvert()
 
-        if (this.isSeller) {
+        if (this.isSeller && !this.isCreated) {
             await this.checkForceCloseBySeller()
         }
 
-        if (this.isBuyer) {
+        if (this.isBuyer && !this.isCreated) {
             await this.checkForceCloseByBuyer()
         }
     }

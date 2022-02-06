@@ -17,7 +17,7 @@
         height='250px'
         type='image'></v-skeleton-loader>
     <v-img
-        v-else-if='ipfsPhoto'
+        v-else-if='!isNoPhoto'
         height='250'
         lazy-src='@/assets/blur-image.png'
         :src='ipfsPhoto'></v-img>
@@ -66,6 +66,7 @@ import { AdvertModule } from "@/store/modules/AdvertStore";
 import { ACTION_GET_ADVERT_FOR_LISTING } from "@/store-consts";
 import { Advert } from "../../../types/Advert";
 import { getIpfsUrl, getShortAddress } from "@/helpers/contract";
+import { NO_IMAGE_SETTLED_KEY } from "@/helpers/consts";
 
 @Component
 export default class AdvertItemCard extends Vue {
@@ -77,6 +78,10 @@ export default class AdvertItemCard extends Vue {
 
     advert: Advert | null = null
     isAdvertLoading: boolean = false
+
+    get isNoPhoto(): boolean {
+        return this.advert?.ipfs === NO_IMAGE_SETTLED_KEY
+    }
 
     get ipfsPhoto(): string {
         return this.advert?.ipfs ? getIpfsUrl(this.advert?.ipfs) : ``
