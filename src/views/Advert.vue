@@ -131,6 +131,38 @@
             </v-alert>
 
             <v-alert
+                v-if='isBuyerBacked && isSeller'
+                border='top'
+                color='warning lighten-1'
+                class='mb-4'
+                dark>
+                <div
+                    v-if='isBuyerDropLoading'
+                    class='d-flex align-center justify-center'>
+                    <v-progress-circular
+                        indeterminate
+                        size='25'
+                        color='white'>
+                    </v-progress-circular>
+                </div>
+                <template v-else>
+                    Buyer
+                    <a
+                        :href='explorerBuyerLink'
+                        target='_blank'
+                        class='text-decoration-underline white--text'>
+                        {{ buyerAddress }}
+                    </a> staked funds for your deal!
+                    <br>
+                    <a
+                        class='text-decoration-underline white--text'
+                        @click.prevent='dropBuyer'>
+                        Click here to drop him off.
+                    </a>
+                </template>
+            </v-alert>
+
+            <v-alert
                 v-if='isFinished'
                 border='top'
                 color='primary lighten-2'
@@ -166,14 +198,16 @@ import { AdvertModule } from "@/store/modules/AdvertStore";
 import {
     ACTION_COULD_BE_FORCE_CLOSED_BY_BUYER,
     ACTION_COULD_BE_FORCE_CLOSED_BY_SELLER,
-    ACTION_GET_ADVERT,
+    ACTION_GET_ADVERT, ACTION_UPDATE_BUYER, GETTER_ACTIVE_CHAIN,
     MUTATION_ADVERT_ITEM
 } from "@/store-consts";
 import { Advert, AdvertStatus } from "../../types/Advert";
 import Moralis from "moralis/dist/moralis.min.js";
-import { getIpfsUrl } from "@/helpers/contract";
+import { getIpfsUrl, getShortAddress } from "@/helpers/contract";
 import { AuthModule } from "@/store/modules/AuthStore";
 import { DEFAULT_ZERO_ADDRESS } from "@/helpers/consts";
+import { Chain } from "../../types/Global";
+import { GlobalModule } from "@/store/modules/GlobalStore";
 
 @Component({
     components: { AdvertSellerActionsBlock, AdvertBuyerActionsBlock, AdvertPriceBlock, AdvertSellerBlock, AdvertForceCloseBlock, AdvertDiscountBlock }
@@ -184,6 +218,8 @@ export default class AdvertPage extends Vue {
 
     forceCloseBySeller: boolean = false
     forceCloseByBuyer: boolean = false
+
+    isBuyerDropLoading: boolean = false
 
     get advert(): Advert | null {
         return AdvertModule.advertItem
@@ -250,6 +286,18 @@ export default class AdvertPage extends Vue {
         return this.advert?.region || ``
     }
 
+    get activeChain(): Chain | null {
+        return GlobalModule[GETTER_ACTIVE_CHAIN]
+    }
+
+    get explorerBuyerLink(): string {
+        return this.activeChain?.explorer ? `${this.activeChain?.explorer}${this.advert?.buyer || ``}` : ``
+    }
+
+    get buyerAddress(): string {
+        return this.advert?.buyer ? getShortAddress(this.advert.buyer) : ``
+    }
+
     @Watch(`$route`)
     async routeChangeHandler(): Promise<void> {
         await AdvertModule[ACTION_GET_ADVERT](this.$route.params.id)
@@ -257,6 +305,14 @@ export default class AdvertPage extends Vue {
         if (!this.advert) {
             this.$router.push({ name: `HomePage` })
         }
+    }
+
+    async dropBuyer() {
+        this.isBuyerDropLoading = true
+
+        await AdvertModule[ACTION_UPDATE_BUYER]({ id: this.$route.params.id, address: DEFAULT_ZERO_ADDRESS })
+
+        this.isBuyerDropLoading = false
     }
 
     async loadAdvert() {

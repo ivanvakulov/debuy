@@ -20,13 +20,14 @@ import {
     ACTION_APPLY_ADVERT,
     ACTION_WITHDRAW_ADVERT,
     ACTION_CONFIRM_ADVERT,
-    ACTION_PROVIDE_DISCOUNT
+    ACTION_PROVIDE_DISCOUNT,
+    ACTION_UPDATE_BUYER
 } from "@/store-consts"
 import Moralis from "moralis/dist/moralis.min.js";
 import { getContractParameters,  populateAdvertResponse } from "@/helpers/contract";
 import {
     Advert,
-    CreateAdvertParams,
+    CreateAdvertParams, DropBuyerParams,
     EditAdvertParams,
     LockFundsParams,
     ProvideDiscountParams
@@ -299,6 +300,24 @@ class AdvertStore extends VuexModule implements IAdvertState {
     async [ACTION_PROVIDE_DISCOUNT](params: ProvideDiscountParams): Promise<number | null> {
         try {
             const options = getContractParameters(`provideDiscount`, { _id: params.id, _discount: params.discount })
+
+            const transaction = await Moralis.executeFunction(options)
+
+            await transaction.wait();
+
+            this.context.dispatch(ACTION_GET_ADVERT, params.id)
+
+            return null
+        }  catch (e) {
+            console.log(e)
+            return Promise.resolve(null)
+        }
+    }
+
+    @Action({ rawError: true })
+    async [ACTION_UPDATE_BUYER](params: DropBuyerParams): Promise<number | null> {
+        try {
+            const options = getContractParameters(`updateBuyer`, { _id: params.id, _newBuyer: params.address })
 
             const transaction = await Moralis.executeFunction(options)
 

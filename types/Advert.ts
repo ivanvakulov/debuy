@@ -24,7 +24,12 @@ export type LockFundsParams = {
 
 export type ProvideDiscountParams = {
     id: string | number
-    discount:  number
+    discount: number
+}
+
+export type DropBuyerParams = {
+    id: string | number
+    address: string
 }
 
 export type Advert = {
